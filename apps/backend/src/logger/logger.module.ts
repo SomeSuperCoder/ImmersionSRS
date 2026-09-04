@@ -1,39 +1,39 @@
 import { Module } from '@nestjs/common'
-import { LoggerModule as PinoLoggerModule } from 'nestjs-pino'
+import pino from 'pino'
 import * as fs from 'fs'
 import * as path from 'path'
 
-const logsDir = path.join(process.cwd(), 'logs')
+// WHY: nestjs-pino transport configuration produces 0-byte log files.
+// Direct pino with multistream gives us full control over file + console output.
 
-// Ensure logs directory exists
+const logsDir = path.join(process.cwd(), 'logs')
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true })
 }
 
-// Create a new log file for this run — timestamped to separate runs
 const runTimestamp = new Date().toISOString().replace(/[:.]/g, '-')
 const logFilePath = path.join(logsDir, `backend-${runTimestamp}.log`)
 
-@Module({
-  imports: [
-    PinoLoggerModule.forRoot({
-      pinoHttp: {
-        transport: {
-          targets: [
-            {
-              target: 'pino/file',
-              options: { destination: logFilePath, mkdir: true },
-              level: 'trace',
-            },
-            {
-              target: 'pino-pretty',
-              options: { colorize: true, translateTime: 'SYS:standard' },
-              level: 'info',
-            },
-          ],
-        },
-      },
-    }),
-  ],
+// File transport — writes ALL levels (trace+) to a timestamped log file
+const fileTransport = pino.destination(logFilePath)
+
+// Console transport — pretty-prints info+ to stdout
+const consoleTransport = pino.transport({
+  target: 'pino-pretty',
+  options: { colorize: true, translateTime: 'SYS:standard' },
 })
+
+// WHY multistream: file gets everything (trace+), console gets info+ (avoids debug noise)
+export const appLogger = pino(
+  {
+    level: 'trace',
+    timestamp: pino.stdTimeFunctions.isoTime,
+  },
+  pino.multistream([
+    { stream: fileTransport, level: 'trace' },
+    { stream: consoleTransport, level: 'info' },
+  ]),
+)
+
+@Module({})
 export class LoggerModule {}

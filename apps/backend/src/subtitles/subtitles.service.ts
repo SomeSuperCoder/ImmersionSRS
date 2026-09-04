@@ -1,5 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { YoutubeTranscript } from 'youtube-transcript'
+import { appLogger } from '../logger/logger.module.js'
+import { proxyFetch } from '../proxy-fetch.js'
+
+// WHY: Replaced NestJS `new Logger(SubtitlesService.name)` with appLogger.
+// NestJS Logger goes to console only; appLogger writes to files + console.
 
 export interface Subtitle {
   startTime: number
@@ -20,15 +25,13 @@ function cleanText(text: string): string {
 
 @Injectable()
 export class SubtitlesService {
-  private readonly logger = new Logger(SubtitlesService.name)
-
   async getSubtitles(videoId: string, lang = 'es'): Promise<Subtitle[]> {
-    this.logger.log(`Fetching subtitles for videoId=${videoId} lang=${lang}`)
+    appLogger.info({ videoId, lang }, 'Fetching subtitles')
 
     try {
-      this.logger.debug(`Calling YoutubeTranscript.fetchTranscript(${videoId}, { lang: ${lang} })`)
-      const transcript = await YoutubeTranscript.fetchTranscript(videoId, { lang })
-      this.logger.log(`Received ${transcript.length} transcript segments for lang=${lang}`)
+      appLogger.debug({ videoId, lang }, 'Calling YoutubeTranscript.fetchTranscript via proxy')
+      const transcript = await YoutubeTranscript.fetchTranscript(videoId, { lang, fetch: proxyFetch })
+      appLogger.info({ videoId, lang, count: transcript.length }, 'Received transcript segments')
 
       const subtitles = transcript.map((item) => ({
         startTime: item.offset / 1000,
@@ -36,16 +39,19 @@ export class SubtitlesService {
         text: cleanText(item.text),
       }))
 
-      this.logger.debug(`Mapped ${subtitles.length} subtitles, first: ${JSON.stringify(subtitles[0])}`)
+      if (subtitles.length > 0) {
+        appLogger.debug({ first: subtitles[0] }, 'First subtitle segment')
+      }
+
       return subtitles
     } catch (error) {
-      this.logger.warn(`Failed to fetch subtitles for lang=${lang}: ${error}`)
+      appLogger.warn({ videoId, lang, error: String(error) }, 'Failed to fetch subtitles')
 
       if (lang !== 'en') {
-        this.logger.log(`Falling back to English subtitles`)
+        appLogger.info({ videoId }, 'Falling back to English')
         try {
-          const transcript = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' })
-          this.logger.log(`Received ${transcript.length} English transcript segments`)
+          const transcript = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en', fetch: proxyFetch })
+          appLogger.info({ videoId, count: transcript.length }, 'Received English transcript')
 
           return transcript.map((item) => ({
             startTime: item.offset / 1000,
@@ -53,12 +59,12 @@ export class SubtitlesService {
             text: cleanText(item.text),
           }))
         } catch (fallbackError) {
-          this.logger.error(`English fallback also failed: ${fallbackError}`)
+          appLogger.error({ videoId, error: String(fallbackError) }, 'English fallback also failed')
           return []
         }
       }
 
-      this.logger.error(`No subtitles available: ${error}`)
+      appLogger.error({ videoId, error: String(error) }, 'No subtitles available')
       return []
     }
   }
