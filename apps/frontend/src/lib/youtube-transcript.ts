@@ -1,4 +1,4 @@
-import { YoutubeTranscript } from 'youtube-transcript'
+import { Innertube } from 'youtubei.js'
 
 export interface Subtitle {
   startTime: number
@@ -8,7 +8,7 @@ export interface Subtitle {
 
 function cleanText(text: string): string {
   return text
-    .replace(/<[^>]*>/g, '') // strip HTML tags
+    .replace(/<[^>]*>/g, '')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -17,62 +17,35 @@ function cleanText(text: string): string {
     .trim()
 }
 
-/**
- * Custom fetch that routes YouTube requests through Vite's proxy
- * to bypass CORS restrictions.
- */
-async function proxyFetch(
-  input: RequestInfo | URL,
-  init?: RequestInit,
-): Promise<Response> {
-  const url =
-    typeof input === 'string'
-      ? input
-      : input instanceof URL
-        ? input.href
-        : input.url
-
-  if (url.startsWith('https://www.youtube.com/')) {
-    const relativePath = url.replace('https://www.youtube.com', '/yt-proxy')
-    return fetch(relativePath, init)
-  }
-
-  return fetch(input, init)
-}
-
-async function fetchWithProxy(
-  videoId: string,
-  lang: string,
-): Promise<Subtitle[]> {
-  const transcript = await YoutubeTranscript.fetchTranscript(videoId, {
-    lang,
-    fetch: proxyFetch,
-  })
-
-  return transcript.map((item) => ({
-    startTime: item.offset / 1000, // ms → seconds
-    endTime: (item.offset + item.duration) / 1000,
-    text: cleanText(item.text),
-  }))
-}
-
 export async function fetchSubtitles(
   videoId: string,
-  lang = 'es',
+  _lang = 'es',
 ): Promise<Subtitle[]> {
   try {
-    return await fetchWithProxy(videoId, lang)
-  } catch {
-    // Fallback to English if Spanish not available
-    if (lang !== 'en') {
-      try {
-        return await fetchWithProxy(videoId, 'en')
-      } catch {
-        console.warn('No subtitles available for this video')
-        return []
-      }
+    const yt = await Innertube.create()
+    const info = await yt.getInfo(videoId)
+    const transcriptInfo = await info.getTranscript()
+
+    if (!transcriptInfo?.transcript?.content?.body?.initial_segments) {
+      console.warn('No transcript segments found')
+      return []
     }
-    console.warn('No subtitles available for this video')
+
+    const segments = transcriptInfo.transcript.content.body.initial_segments
+
+    return segments.map((seg: any) => {
+      const text = seg.snippet?.text || seg.snippet?.runs?.map((r: any) => r.text).join('') || ''
+      const startMs = parseInt(seg.start_ms || '0', 10)
+      const endMs = parseInt(seg.end_ms || '0', 10)
+
+      return {
+        startTime: startMs / 1000,
+        endTime: endMs / 1000,
+        text: cleanText(text),
+      }
+    })
+  } catch (error) {
+    console.warn('Failed to fetch subtitles:', error)
     return []
   }
 }

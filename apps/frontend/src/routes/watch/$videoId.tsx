@@ -38,7 +38,11 @@ function Watch() {
   useEffect(() => {
     setIsLoadingSubs(true)
     fetchSubtitles(videoId, 'es').then((subs) => {
+      console.log(`Loaded ${subs.length} subtitle segments`)
       setSubtitles(subs)
+      setIsLoadingSubs(false)
+    }).catch((err) => {
+      console.error('Subtitle fetch failed:', err)
       setIsLoadingSubs(false)
     })
   }, [videoId])
