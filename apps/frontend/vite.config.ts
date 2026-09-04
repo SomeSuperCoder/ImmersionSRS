@@ -11,4 +11,13 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/api/youtube-transcript': {
+        target: 'https://www.youtube.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/youtube-transcript/, '/api/timedtext'),
+      },
+    },
+  },
 })
