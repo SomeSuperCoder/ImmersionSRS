@@ -5,6 +5,7 @@ import {
   fetchSubtitles,
   type Subtitle,
 } from '@/lib/youtube-transcript'
+import { logger } from '@/lib/logger'
 
 declare global {
   interface Window {
@@ -36,25 +37,32 @@ function Watch() {
 
   // Fetch real subtitles
   useEffect(() => {
+    logger.info('Watch', `Fetching subtitles for videoId=${videoId}`)
     setIsLoadingSubs(true)
-    fetchSubtitles(videoId, 'es').then((subs) => {
-      console.log(`Loaded ${subs.length} subtitle segments`)
-      setSubtitles(subs)
-      setIsLoadingSubs(false)
-    }).catch((err) => {
-      console.error('Subtitle fetch failed:', err)
-      setIsLoadingSubs(false)
-    })
+
+    fetchSubtitles(videoId, 'es')
+      .then((subs) => {
+        logger.info('Watch', `Loaded ${subs.length} subtitle segments`, { videoId, count: subs.length })
+        setSubtitles(subs)
+        setIsLoadingSubs(false)
+      })
+      .catch((err) => {
+        logger.error('Watch', `Failed to fetch subtitles: ${err}`, { videoId, error: String(err) })
+        setIsLoadingSubs(false)
+      })
   }, [videoId])
 
   // Load YouTube IFrame API
   useEffect(() => {
+    logger.info('Watch', `Loading YouTube IFrame API for videoId=${videoId}`)
+
     const tag = document.createElement('script')
     tag.src = 'https://www.youtube.com/iframe_api'
     const firstScriptTag = document.getElementsByTagName('script')[0]
     firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
 
     window.onYouTubeIframeAPIReady = () => {
+      logger.info('Watch', 'YouTube IFrame API ready, creating player')
       playerRef.current = new window.YT.Player(containerRef.current, {
         videoId,
         playerVars: {
