@@ -1,9 +1,59 @@
+# Dependencies
 node_modules/
+.pnpm-store/
+
+# Build output
 dist/
-.env
-.env.local
-*.log
+build/
 .turbo/
-.vite/
-data/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
 logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Vite
+.vite/
+
+# Internal coordination (Tech Lead)
+data/
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.local
+*.pid
+*.seed
+*.pid.lock
+.cache/
