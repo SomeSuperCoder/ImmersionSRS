@@ -13,10 +13,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api/youtube-transcript': {
+      '/yt-proxy': {
         target: 'https://www.youtube.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/youtube-transcript/, '/api/timedtext'),
+        rewrite: (path) => path.replace(/^\/yt-proxy/, ''),
       },
     },
   },
