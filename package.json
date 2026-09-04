@@ -2,7 +2,9 @@
   "name": "immersion-srs",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter frontend dev",
-    "build": "pnpm --filter frontend build"
+    "dev": "pnpm --filter frontend dev & pnpm --filter backend start:dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend start:dev",
+    "build": "pnpm --filter frontend build && pnpm --filter backend build"
   }
 }

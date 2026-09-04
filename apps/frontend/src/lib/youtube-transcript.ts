@@ -9,7 +9,7 @@ export async function fetchSubtitles(
   lang = 'es',
 ): Promise<Subtitle[]> {
   try {
-    const response = await fetch(`/api/subtitles?v=${videoId}&lang=${lang}`)
+    const response = await fetch(`http://localhost:3000/api/subtitles?v=${videoId}&lang=${lang}`)
     if (!response.ok) {
       console.warn('Subtitle API returned', response.status)
       return []
