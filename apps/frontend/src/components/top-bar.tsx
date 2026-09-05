@@ -14,7 +14,7 @@ const LANGUAGES = [
   { code: 'ar', label: 'العربية' },
 ]
 
-const EXAMPLE_COUNTS = [3, 5, 8, 10]
+const EXAMPLE_COUNTS = [1, 2, 3, 4, 5]
 
 export function TopBar() {
   const { settings, updateSettings, loading } = useSettings()
@@ -85,6 +85,11 @@ export function TopBar() {
               </option>
             ))}
           </select>
+          {settings.numExamples >= 4 && (
+            <p className="text-xs text-yellow-500/80 whitespace-nowrap">
+              ⚠️ Alto uso de tokens
+            </p>
+          )}
         </div>
       </div>
     </div>
