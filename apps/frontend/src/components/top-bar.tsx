@@ -48,7 +48,9 @@ export function TopBar() {
             onValueChange={(v) => v && updateSettings({ nativeLanguage: v })}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue />
+              <SelectValue placeholder="Seleccionar...">
+                {LANGUAGES.find((l) => l.code === (settings.nativeLanguage ?? 'es'))?.label}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {LANGUAGES.map((l) => (
@@ -70,7 +72,9 @@ export function TopBar() {
             onValueChange={(v) => v && updateSettings({ learnedLanguage: v })}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue />
+              <SelectValue placeholder="Seleccionar...">
+                {LANGUAGES.find((l) => l.code === (settings.learnedLanguage ?? 'en'))?.label}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {LANGUAGES.map((l) => (
@@ -92,7 +96,9 @@ export function TopBar() {
             onValueChange={(v) => v && updateSettings({ numExamples: parseInt(v, 10) })}
           >
             <SelectTrigger className="w-[70px]">
-              <SelectValue />
+              <SelectValue>
+                {settings.numExamples ?? 3} ejemplos
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {EXAMPLE_COUNTS.map((n) => (
