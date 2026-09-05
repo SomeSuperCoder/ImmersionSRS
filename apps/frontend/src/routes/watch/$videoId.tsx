@@ -6,6 +6,7 @@ import {
   type Subtitle,
 } from '@/lib/youtube-transcript'
 import { logger } from '@/lib/logger'
+import { SubtitleTooltip } from '@/components/subtitle-tooltip'
 
 declare global {
   interface Window {
@@ -134,44 +135,50 @@ function Watch() {
           <div className="lg:w-[25%] lg:min-h-0">
             <Card className="lg:h-full">
               <CardContent className="p-0">
-                {isLoadingSubs ? (
-                  <div className="flex items-center justify-center h-32">
-                    <p className="text-sm text-muted-foreground">
-                      Cargando subtítulos...
-                    </p>
-                  </div>
-                ) : subtitles.length === 0 ? (
-                  <div className="flex items-center justify-center h-32">
-                    <p className="text-sm text-muted-foreground">
-                      No hay subtítulos disponibles
-                    </p>
-                  </div>
-                ) : (
-                  <div
-                    ref={subtitleListRef}
-                    className="lg:h-[calc(100vh-200px)] overflow-y-auto scroll-smooth"
-                  >
-                    {subtitles.map((sub, i) => {
-                      const isActive = i === currentIndex
-                      return (
-                        <div
-                          key={i}
-                          id={`sub-${i}`}
-                          className={`px-4 py-3 text-sm transition-colors duration-150 cursor-pointer hover:bg-muted/50 ${
-                            isActive
-                              ? 'bg-primary/10 text-foreground font-medium border-l-2 border-primary'
-                              : 'text-muted-foreground'
-                          } ${i < subtitles.length - 1 ? 'border-b border-border/40' : ''}`}
-                        >
-                          <span className="text-[10px] tabular-nums text-muted-foreground/60 mr-2">
-                            {formatTime(sub.startTime)}
-                          </span>
-                          {sub.text}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
+                <SubtitleTooltip
+                  subtitles={subtitles}
+                  videoTitle={`Video ${videoId}`}
+                >
+                  {isLoadingSubs ? (
+                    <div className="flex items-center justify-center h-32">
+                      <p className="text-sm text-muted-foreground">
+                        Cargando subtítulos...
+                      </p>
+                    </div>
+                  ) : subtitles.length === 0 ? (
+                    <div className="flex items-center justify-center h-32">
+                      <p className="text-sm text-muted-foreground">
+                        No hay subtítulos disponibles
+                      </p>
+                    </div>
+                  ) : (
+                    <div
+                      ref={subtitleListRef}
+                      className="lg:h-[calc(100vh-200px)] overflow-y-auto scroll-smooth"
+                    >
+                      {subtitles.map((sub, i) => {
+                        const isActive = i === currentIndex
+                        return (
+                          <div
+                            key={i}
+                            id={`sub-${i}`}
+                            data-subtitle-index={i}
+                            className={`px-4 py-3 text-sm transition-colors duration-150 cursor-pointer hover:bg-muted/50 select-text ${
+                              isActive
+                                ? 'bg-primary/10 text-foreground font-medium border-l-2 border-primary'
+                                : 'text-muted-foreground'
+                            } ${i < subtitles.length - 1 ? 'border-b border-border/40' : ''}`}
+                          >
+                            <span className="text-[10px] tabular-nums text-muted-foreground/60 mr-2">
+                              {formatTime(sub.startTime)}
+                            </span>
+                            {sub.text}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </SubtitleTooltip>
               </CardContent>
             </Card>
           </div>

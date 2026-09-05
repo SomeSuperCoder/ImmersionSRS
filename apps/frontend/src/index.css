@@ -35,3 +35,10 @@ body {
   color: var(--foreground);
   font-family: system-ui, -apple-system, sans-serif;
 }
+
+@layer utilities {
+  .select-text {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
