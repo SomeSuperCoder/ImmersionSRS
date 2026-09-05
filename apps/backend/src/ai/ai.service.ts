@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
 import { proxyFetch } from '../proxy-fetch.js'
 import { appLogger } from '../logger/logger.module.js'
-import { vocabularyPrompt, grammarPrompt, type ChatMessage } from './prompts.js'
+import { vocabularyPrompt, grammarPrompt, grammarAutoPrompt, type ChatMessage } from './prompts.js'
 
 export interface AiRequest {
-  type: 'vocabulary' | 'grammar'
+  type: 'vocabulary' | 'grammar' | 'grammar_auto'
   selectedText: string
   context: {
     prevLine: string
@@ -47,6 +47,10 @@ export class AiService {
         return this.parseVocabulary(content, req.selectedText)
       }
 
+      if (req.type === 'grammar_auto') {
+        return { type: 'grammar', explanation: content }
+      }
+
       return { type: 'grammar', explanation: content }
     } catch (error) {
       appLogger.error({ error: String(error) }, 'AI API call failed')
@@ -57,6 +61,9 @@ export class AiService {
   private buildMessages(req: AiRequest): ChatMessage[] {
     if (req.type === 'vocabulary') {
       return vocabularyPrompt(req.selectedText, req.context, req.numExamples)
+    }
+    if (req.type === 'grammar_auto') {
+      return grammarAutoPrompt(req.selectedText, req.context)
     }
     return grammarPrompt(req.selectedText, req.context, req.question ?? '')
   }

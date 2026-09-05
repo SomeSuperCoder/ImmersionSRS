@@ -1,11 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import {
   explainVocabulary,
-  explainGrammar,
+  explainGrammarAuto,
   type AiContext,
   type VocabularyResponse,
   type GrammarResponse,
@@ -35,10 +34,8 @@ export function SubtitleTooltip({
   const [vocabOpen, setVocabOpen] = useState(false)
 
   const [grammarOpen, setGrammarOpen] = useState(false)
-  const [grammarQuestion, setGrammarQuestion] = useState('')
   const [grammarResult, setGrammarResult] = useState<GrammarResponse | null>(null)
   const [grammarLoading, setGrammarLoading] = useState(false)
-  const [showSkipWarning, setShowSkipWarning] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const { settings } = useSettings()
@@ -107,23 +104,17 @@ export function SubtitleTooltip({
     }
   }, [selection, getContext, settings.numExamples])
 
-  // Handle grammar click
-  const handleGrammarClick = useCallback(() => {
+  // Handle grammar click — auto-explain without user input
+  const handleGrammarClick = useCallback(async () => {
+    if (!selection) return
+
     setGrammarOpen(true)
-    setGrammarQuestion('')
     setGrammarResult(null)
-  }, [])
-
-  // Handle grammar submit
-  const handleGrammarSubmit = useCallback(async () => {
-    if (!selection || !grammarQuestion.trim()) return
-
     setGrammarLoading(true)
-    setGrammarResult(null)
 
     try {
       const ctx = getContext(selection.subtitleIndex)
-      const result = await explainGrammar(selection.text, ctx, grammarQuestion)
+      const result = await explainGrammarAuto(selection.text, ctx)
       setGrammarResult(result)
     } catch {
       setGrammarResult({
@@ -133,7 +124,7 @@ export function SubtitleTooltip({
     } finally {
       setGrammarLoading(false)
     }
-  }, [selection, grammarQuestion, getContext])
+  }, [selection, getContext])
 
   // Close selection on click outside
   useEffect(() => {
@@ -241,8 +232,6 @@ export function SubtitleTooltip({
       <Dialog open={grammarOpen} onOpenChange={(open) => {
         setGrammarOpen(open)
         if (!open) {
-          setShowSkipWarning(false)
-          setGrammarQuestion('')
           setGrammarResult(null)
         }
       }}>
@@ -257,75 +246,20 @@ export function SubtitleTooltip({
               )}
             </DialogTitle>
             <DialogDescription>
-              Escribe tu pregunta sobre la gramática de esta expresión
+              La IA explicará todo lo que podrías no entender sobre esta expresión
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="¿Qué quieres entender? Ej: ¿Por qué usa presente continuo?"
-                value={grammarQuestion}
-                onChange={(e) => setGrammarQuestion(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !grammarLoading) {
-                    handleGrammarSubmit()
-                  }
-                }}
-                disabled={grammarLoading}
-              />
-              <Button
-                onClick={handleGrammarSubmit}
-                disabled={grammarLoading || !grammarQuestion.trim()}
-              >
-                {grammarLoading ? '...' : '→'}
-              </Button>
-            </div>
-
-            <Button
-              variant="ghost"
-              className="w-full text-muted-foreground text-xs"
-              onClick={() => setShowSkipWarning(true)}
-            >
-              Saltar explicación
-            </Button>
-
             {grammarLoading ? (
               <div className="py-8 text-center text-muted-foreground">
-                <div className="animate-pulse">Consultando IA...</div>
+                <div className="animate-pulse">La IA está analizando la gramática...</div>
               </div>
             ) : grammarResult ? (
               <div className="text-sm whitespace-pre-wrap leading-relaxed">
                 {grammarResult.explanation}
               </div>
             ) : null}
-          </div>
-        </DialogContent>
-      </Dialog>
-      {/* Skip confirmation dialog */}
-      <Dialog open={showSkipWarning} onOpenChange={setShowSkipWarning}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>⚠️ ¿Saltar explicación?</DialogTitle>
-            <DialogDescription>
-              Si no entiendes la gramática, es recomendable que revises la explicación antes de continuar.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setShowSkipWarning(false)}>
-              Volver
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setShowSkipWarning(false)
-                setGrammarOpen(false)
-                setGrammarQuestion('')
-                setGrammarResult(null)
-              }}
-            >
-              Saltar de todos modos
-            </Button>
           </div>
         </DialogContent>
       </Dialog>

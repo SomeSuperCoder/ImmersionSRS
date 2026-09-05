@@ -46,3 +46,16 @@ export async function explainGrammar(
   if (!res.ok) throw new Error(`AI API error: ${res.status}`)
   return res.json()
 }
+
+export async function explainGrammarAuto(
+  selectedText: string,
+  context: AiContext,
+): Promise<GrammarResponse> {
+  const res = await fetch(AI_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'grammar_auto', selectedText, context }),
+  })
+  if (!res.ok) throw new Error(`AI API error: ${res.status}`)
+  return res.json()
+}
