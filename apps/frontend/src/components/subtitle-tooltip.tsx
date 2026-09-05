@@ -1,9 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import {
   explainVocabulary,
+  explainGrammar,
   explainGrammarAuto,
   type AiContext,
   type VocabularyResponse,
@@ -34,6 +36,7 @@ export function SubtitleTooltip({
   const [vocabOpen, setVocabOpen] = useState(false)
 
   const [grammarOpen, setGrammarOpen] = useState(false)
+  const [grammarQuestion, setGrammarQuestion] = useState('')
   const [grammarResult, setGrammarResult] = useState<GrammarResponse | null>(null)
   const [grammarLoading, setGrammarLoading] = useState(false)
 
@@ -104,13 +107,42 @@ export function SubtitleTooltip({
     }
   }, [selection, getContext, settings.numExamples])
 
-  // Handle grammar click — auto-explain without user input
-  const handleGrammarClick = useCallback(async () => {
+  // Handle grammar click — open dialog with input
+  const handleGrammarClick = useCallback(() => {
+    if (!selection) return
+    setGrammarQuestion('')
+    setGrammarResult(null)
+    setGrammarOpen(true)
+  }, [selection])
+
+  // Handle specific question submission
+  const handleGrammarSubmit = useCallback(async () => {
+    if (!selection || !grammarQuestion.trim()) return
+
+    setGrammarLoading(true)
+    setGrammarResult(null)
+
+    try {
+      const ctx = getContext(selection.subtitleIndex)
+      const result = await explainGrammar(selection.text, ctx, grammarQuestion)
+      setGrammarResult(result)
+    } catch {
+      setGrammarResult({
+        type: 'grammar',
+        explanation: 'Error loading explanation. Please try again.',
+      })
+    } finally {
+      setGrammarLoading(false)
+    }
+  }, [selection, grammarQuestion, getContext])
+
+  // Handle skip — auto-explain everything
+  const handleGrammarSkip = useCallback(async () => {
     if (!selection) return
 
-    setGrammarOpen(true)
-    setGrammarResult(null)
     setGrammarLoading(true)
+    setGrammarResult(null)
+    setGrammarQuestion('')
 
     try {
       const ctx = getContext(selection.subtitleIndex)
@@ -232,6 +264,7 @@ export function SubtitleTooltip({
       <Dialog open={grammarOpen} onOpenChange={(open) => {
         setGrammarOpen(open)
         if (!open) {
+          setGrammarQuestion('')
           setGrammarResult(null)
         }
       }}>
@@ -246,14 +279,46 @@ export function SubtitleTooltip({
               )}
             </DialogTitle>
             <DialogDescription>
-              La IA explicará todo lo que podrías no entender sobre esta expresión
+              Escribe tu pregunta o salta para una explicación completa
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Input row + submit */}
+            <div className="flex gap-2">
+              <Input
+                placeholder="¿Qué quieres entender? Ej: ¿Por qué usa presente continuo?"
+                value={grammarQuestion}
+                onChange={(e) => setGrammarQuestion(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !grammarLoading && grammarQuestion.trim()) {
+                    handleGrammarSubmit()
+                  }
+                }}
+                disabled={grammarLoading}
+              />
+              <Button
+                onClick={handleGrammarSubmit}
+                disabled={grammarLoading || !grammarQuestion.trim()}
+              >
+                {grammarLoading ? '...' : '→'}
+              </Button>
+            </div>
+
+            {/* Skip button */}
+            <Button
+              variant="ghost"
+              className="w-full text-muted-foreground text-xs"
+              onClick={handleGrammarSkip}
+              disabled={grammarLoading}
+            >
+              ⏭️ Saltar — explicar todo sobre esta gramática
+            </Button>
+
+            {/* Result */}
             {grammarLoading ? (
               <div className="py-8 text-center text-muted-foreground">
-                <div className="animate-pulse">La IA está analizando la gramática...</div>
+                <div className="animate-pulse">Consultando IA...</div>
               </div>
             ) : grammarResult ? (
               <div className="text-sm whitespace-pre-wrap leading-relaxed">
