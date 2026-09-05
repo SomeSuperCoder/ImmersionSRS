@@ -39,6 +39,10 @@ export function SubtitleTooltip({
   const [grammarQuestion, setGrammarQuestion] = useState('')
   const [grammarResult, setGrammarResult] = useState<GrammarResponse | null>(null)
   const [grammarLoading, setGrammarLoading] = useState(false)
+  // Persist selection data for the grammar dialog — selection gets cleared by
+  // handleClickOutside when the user interacts with the portaled Dialog content
+  const [grammarSelectedText, setGrammarSelectedText] = useState('')
+  const [grammarSubtitleIndex, setGrammarSubtitleIndex] = useState(-1)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const { settings } = useSettings()
@@ -110,6 +114,10 @@ export function SubtitleTooltip({
   // Handle grammar click — open dialog with input
   const handleGrammarClick = useCallback(() => {
     if (!selection) return
+    // Capture selection data before the dialog opens — handleClickOutside will
+    // clear `selection` when the user interacts with the portaled Dialog content
+    setGrammarSelectedText(selection.text)
+    setGrammarSubtitleIndex(selection.subtitleIndex)
     setGrammarQuestion('')
     setGrammarResult(null)
     setGrammarOpen(true)
@@ -117,14 +125,14 @@ export function SubtitleTooltip({
 
   // Handle specific question submission
   const handleGrammarSubmit = useCallback(async () => {
-    if (!selection || !grammarQuestion.trim()) return
+    if (!grammarSelectedText || !grammarQuestion.trim()) return
 
     setGrammarLoading(true)
     setGrammarResult(null)
 
     try {
-      const ctx = getContext(selection.subtitleIndex)
-      const result = await explainGrammar(selection.text, ctx, grammarQuestion)
+      const ctx = getContext(grammarSubtitleIndex)
+      const result = await explainGrammar(grammarSelectedText, ctx, grammarQuestion)
       setGrammarResult(result)
     } catch {
       setGrammarResult({
@@ -134,19 +142,19 @@ export function SubtitleTooltip({
     } finally {
       setGrammarLoading(false)
     }
-  }, [selection, grammarQuestion, getContext])
+  }, [grammarSelectedText, grammarSubtitleIndex, grammarQuestion, getContext])
 
   // Handle skip — auto-explain everything
   const handleGrammarSkip = useCallback(async () => {
-    if (!selection) return
+    if (!grammarSelectedText) return
 
     setGrammarLoading(true)
     setGrammarResult(null)
     setGrammarQuestion('')
 
     try {
-      const ctx = getContext(selection.subtitleIndex)
-      const result = await explainGrammarAuto(selection.text, ctx)
+      const ctx = getContext(grammarSubtitleIndex)
+      const result = await explainGrammarAuto(grammarSelectedText, ctx)
       setGrammarResult(result)
     } catch {
       setGrammarResult({
@@ -156,7 +164,7 @@ export function SubtitleTooltip({
     } finally {
       setGrammarLoading(false)
     }
-  }, [selection, getContext])
+  }, [grammarSelectedText, grammarSubtitleIndex, getContext])
 
   // Close selection on click outside
   useEffect(() => {
@@ -266,15 +274,17 @@ export function SubtitleTooltip({
         if (!open) {
           setGrammarQuestion('')
           setGrammarResult(null)
+          setGrammarSelectedText('')
+          setGrammarSubtitleIndex(-1)
         }
       }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               📙 Gramática
-              {selection && (
+              {grammarSelectedText && (
                 <Badge variant="outline" className="text-xs">
-                  "{selection.text}"
+                  "{grammarSelectedText}"
                 </Badge>
               )}
             </DialogTitle>
