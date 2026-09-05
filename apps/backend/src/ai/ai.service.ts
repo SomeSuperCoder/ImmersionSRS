@@ -14,6 +14,7 @@ export interface AiRequest {
   }
   question?: string
   numExamples?: number
+  nativeLanguage?: string
 }
 
 @Injectable()
@@ -59,13 +60,14 @@ export class AiService {
   }
 
   private buildMessages(req: AiRequest): ChatMessage[] {
+    const lang = req.nativeLanguage ?? 'es'
     if (req.type === 'vocabulary') {
-      return vocabularyPrompt(req.selectedText, req.context, req.numExamples)
+      return vocabularyPrompt(req.selectedText, req.context, req.numExamples, lang)
     }
     if (req.type === 'grammar_auto') {
-      return grammarAutoPrompt(req.selectedText, req.context)
+      return grammarAutoPrompt(req.selectedText, req.context, lang)
     }
-    return grammarPrompt(req.selectedText, req.context, req.question ?? '')
+    return grammarPrompt(req.selectedText, req.context, req.question ?? '', lang)
   }
 
   private parseVocabulary(content: string, selectedText: string): any {

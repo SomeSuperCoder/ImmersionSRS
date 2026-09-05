@@ -45,15 +45,16 @@ export function vocabularyPrompt(
   selectedText: string,
   ctx: PromptContext,
   numExamples: number = 3,
+  nativeLanguage: string = 'es',
 ): ChatMessage[] {
   const contextBlock = buildContextBlock(ctx)
 
   return [
     {
       role: 'system',
-      content: `You are a language tutor. The user is watching a video and wants to understand a word in context.
+      content: `You are a language tutor. The user's native language is ${nativeLanguage}. The user is watching a video and wants to understand a word in context.
 
-Respond ONLY with valid JSON (no markdown, no code fences):
+Respond ONLY with valid JSON (no markdown, no code fences). Answer in ${nativeLanguage}:
 {
   "word": "the selected word",
   "definition": "clear contextual definition of the word as used in this sentence",
@@ -77,13 +78,14 @@ export function grammarPrompt(
   selectedText: string,
   ctx: PromptContext,
   question: string,
+  nativeLanguage: string = 'es',
 ): ChatMessage[] {
   const contextBlock = buildContextBlock(ctx)
 
   return [
     {
       role: 'system',
-      content: `You are a language tutor. The user is watching a video and has a grammar question about a sentence. Explain clearly and concisely in plain text. Use examples if helpful. Answer in the same language as the question.`,
+      content: `You are a language tutor. The user's native language is ${nativeLanguage}. The user is watching a video and has a grammar question about a sentence. Explain clearly and concisely in plain text. Use examples if helpful. Answer in ${nativeLanguage}.`,
     },
     {
       role: 'user',
@@ -99,13 +101,14 @@ export function grammarPrompt(
 export function grammarAutoPrompt(
   selectedText: string,
   ctx: PromptContext,
+  nativeLanguage: string = 'es',
 ): ChatMessage[] {
   const contextBlock = buildContextBlock(ctx)
 
   return [
     {
       role: 'system',
-      content: `You are a language tutor. The user is watching a video and selected a phrase they don't fully understand. They haven't asked a specific question — your job is to explain EVERYTHING they might not understand about this grammar.
+      content: `You are a language tutor. The user's native language is ${nativeLanguage}. The user is watching a video and selected a phrase they don't fully understand. Your job is to explain EVERYTHING they might not understand about this grammar.
 
 Cover ALL of the following as relevant:
 - Tense and why it's used here
@@ -116,7 +119,7 @@ Cover ALL of the following as relevant:
 - Common mistakes learners make with this pattern
 - 2-3 usage examples in different contexts
 
-Be thorough but organized. Use headers or bullet points for readability. Answer in the same language as the selected text's context.`,
+Be thorough but organized. Use headers or bullet points for readability. Answer in ${nativeLanguage}.`,
     },
     {
       role: 'user',

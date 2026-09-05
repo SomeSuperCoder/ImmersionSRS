@@ -98,7 +98,7 @@ export function SubtitleTooltip({
 
     try {
       const ctx = getContext(selection.subtitleIndex)
-      const result = await explainVocabulary(selection.text, ctx, settings.numExamples)
+      const result = await explainVocabulary(selection.text, ctx, settings.numExamples, settings.nativeLanguage)
       setVocabResult(result)
     } catch {
       setVocabResult({
@@ -133,7 +133,7 @@ export function SubtitleTooltip({
 
     try {
       const ctx = getContext(grammarSubtitleIndex)
-      const result = await explainGrammar(grammarSelectedText, ctx, grammarQuestion)
+      const result = await explainGrammar(grammarSelectedText, ctx, grammarQuestion, settings.nativeLanguage)
       setGrammarResult(result)
     } catch {
       setGrammarResult({
@@ -155,7 +155,7 @@ export function SubtitleTooltip({
 
     try {
       const ctx = getContext(grammarSubtitleIndex)
-      const result = await explainGrammarAuto(grammarSelectedText, ctx)
+      const result = await explainGrammarAuto(grammarSelectedText, ctx, settings.nativeLanguage)
       setGrammarResult(result)
     } catch {
       setGrammarResult({
