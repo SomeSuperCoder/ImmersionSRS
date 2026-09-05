@@ -1,14 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { proxyFetch } from '../proxy-fetch.js'
 import { appLogger } from '../logger/logger.module.js'
-
-// WHY: Interfaces define the contract for AI explain requests.
-// Separating vocabulary and grammar into a discriminated union keeps type safety clean.
-
-interface ChatMessage {
-  role: 'system' | 'user' | 'assistant'
-  content: string
-}
+import { vocabularyPrompt, grammarPrompt, type ChatMessage } from './prompts.js'
 
 export interface AiRequest {
   type: 'vocabulary' | 'grammar'
@@ -62,52 +55,14 @@ export class AiService {
   }
 
   private buildMessages(req: AiRequest): ChatMessage[] {
-    const contextBlock = [
-      req.context.prevLine && `Previous: "${req.context.prevLine}"`,
-      `Current: "${req.context.currentLine}"`,
-      req.context.nextLine && `Next: "${req.context.nextLine}"`,
-      req.context.videoTitle && `Video: "${req.context.videoTitle}"`,
-    ].filter(Boolean).join('\n')
-
     if (req.type === 'vocabulary') {
-      const numExamples = req.numExamples ?? 3
-      return [
-        {
-          role: 'system',
-          content: `You are a language tutor. The user is watching a video and wants to understand a word in context.
-
-Respond ONLY with valid JSON (no markdown, no code fences):
-{
-  "word": "the selected word",
-  "definition": "clear contextual definition of the word as used in this sentence",
-  "examples": ["${numExamples} example sentences using the same word with the same meaning, each in a different realistic context"]
-}
-
-Be concise. The definition should match how the word is used in THIS specific context, not all possible meanings.`,
-        },
-        {
-          role: 'user',
-          content: `Context:\n${contextBlock}\n\nSelected word/phrase: "${req.selectedText}"\n\nExplain this word in this context. Provide exactly ${numExamples} example sentences.`,
-        },
-      ]
+      return vocabularyPrompt(req.selectedText, req.context, req.numExamples)
     }
-
-    // Grammar type
-    return [
-      {
-        role: 'system',
-        content: `You are a language tutor. The user is watching a video and has a grammar question about a sentence. Explain clearly and concisely in plain text. Use examples if helpful. Answer in the same language as the question.`,
-      },
-      {
-        role: 'user',
-        content: `Context:\n${contextBlock}\n\nUser question: "${req.question}"`,
-      },
-    ]
+    return grammarPrompt(req.selectedText, req.context, req.question ?? '')
   }
 
   private parseVocabulary(content: string, selectedText: string): any {
     try {
-      // WHY: AI may wrap JSON in markdown code fences — extract the raw JSON object.
       const jsonMatch = content.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0])
@@ -117,7 +72,6 @@ Be concise. The definition should match how the word is used in THIS specific co
       appLogger.warn({ content }, 'Failed to parse vocabulary JSON')
     }
 
-    // Fallback: return raw content as definition
     return {
       type: 'vocabulary',
       word: selectedText,
