@@ -38,6 +38,7 @@ export function SubtitleTooltip({
   const [grammarQuestion, setGrammarQuestion] = useState('')
   const [grammarResult, setGrammarResult] = useState<GrammarResponse | null>(null)
   const [grammarLoading, setGrammarLoading] = useState(false)
+  const [showSkipWarning, setShowSkipWarning] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const { settings } = useSettings()
@@ -237,7 +238,14 @@ export function SubtitleTooltip({
       </Dialog>
 
       {/* Grammar dialog */}
-      <Dialog open={grammarOpen} onOpenChange={setGrammarOpen}>
+      <Dialog open={grammarOpen} onOpenChange={(open) => {
+        setGrammarOpen(open)
+        if (!open) {
+          setShowSkipWarning(false)
+          setGrammarQuestion('')
+          setGrammarResult(null)
+        }
+      }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -274,6 +282,14 @@ export function SubtitleTooltip({
               </Button>
             </div>
 
+            <Button
+              variant="ghost"
+              className="w-full text-muted-foreground text-xs"
+              onClick={() => setShowSkipWarning(true)}
+            >
+              Saltar explicación
+            </Button>
+
             {grammarLoading ? (
               <div className="py-8 text-center text-muted-foreground">
                 <div className="animate-pulse">Consultando IA...</div>
@@ -283,6 +299,33 @@ export function SubtitleTooltip({
                 {grammarResult.explanation}
               </div>
             ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Skip confirmation dialog */}
+      <Dialog open={showSkipWarning} onOpenChange={setShowSkipWarning}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>⚠️ ¿Saltar explicación?</DialogTitle>
+            <DialogDescription>
+              Si no entiendes la gramática, es recomendable que revises la explicación antes de continuar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setShowSkipWarning(false)}>
+              Volver
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setShowSkipWarning(false)
+                setGrammarOpen(false)
+                setGrammarQuestion('')
+                setGrammarResult(null)
+              }}
+            >
+              Saltar de todos modos
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
