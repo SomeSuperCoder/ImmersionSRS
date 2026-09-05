@@ -7,6 +7,7 @@ import {
 } from '@/lib/youtube-transcript'
 import { logger } from '@/lib/logger'
 import { SubtitleTooltip } from '@/components/subtitle-tooltip'
+import { useSettings } from '@/lib/settings-context'
 
 declare global {
   interface Window {
@@ -27,6 +28,7 @@ export const Route = createFileRoute('/watch/$videoId')({
 
 function Watch() {
   const { videoId } = useParams({ from: '/watch/$videoId' })
+  const { settings } = useSettings()
   const playerRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const subtitleListRef = useRef<HTMLDivElement>(null)
@@ -37,10 +39,11 @@ function Watch() {
 
   // Fetch real subtitles
   useEffect(() => {
-    logger.info('Watch', `Fetching subtitles for videoId=${videoId}`)
+    const lang = settings.learnedLanguage || 'es'
+    logger.info('Watch', `Fetching subtitles for videoId=${videoId}, lang=${lang}`)
     setIsLoadingSubs(true)
 
-    fetchSubtitles(videoId, 'es')
+    fetchSubtitles(videoId, lang)
       .then((subs) => {
         logger.info('Watch', `Loaded ${subs.length} subtitle segments`, { videoId, count: subs.length })
         setSubtitles(subs)
@@ -50,7 +53,12 @@ function Watch() {
         logger.error('Watch', `Failed to fetch subtitles: ${err}`, { videoId, error: String(err) })
         setIsLoadingSubs(false)
       })
-  }, [videoId])
+  }, [videoId, settings.learnedLanguage])
+
+  // Reset current index when subtitles change
+  useEffect(() => {
+    setCurrentIndex(-1)
+  }, [subtitles])
 
   // Load YouTube IFrame API
   useEffect(() => {
