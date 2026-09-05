@@ -20,6 +20,7 @@ export interface AiRequest {
     videoTitle: string
   }
   question?: string
+  numExamples?: number
 }
 
 @Injectable()
@@ -69,6 +70,7 @@ export class AiService {
     ].filter(Boolean).join('\n')
 
     if (req.type === 'vocabulary') {
+      const numExamples = req.numExamples ?? 3
       return [
         {
           role: 'system',
@@ -78,14 +80,14 @@ Respond ONLY with valid JSON (no markdown, no code fences):
 {
   "word": "the selected word",
   "definition": "clear contextual definition of the word as used in this sentence",
-  "examples": ["3-5 example sentences using the same word with the same meaning, each in a different realistic context"]
+  "examples": ["${numExamples} example sentences using the same word with the same meaning, each in a different realistic context"]
 }
 
 Be concise. The definition should match how the word is used in THIS specific context, not all possible meanings.`,
         },
         {
           role: 'user',
-          content: `Context:\n${contextBlock}\n\nSelected word/phrase: "${req.selectedText}"\n\nExplain this word in this context.`,
+          content: `Context:\n${contextBlock}\n\nSelected word/phrase: "${req.selectedText}"\n\nExplain this word in this context. Provide exactly ${numExamples} example sentences.`,
         },
       ]
     }

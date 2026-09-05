@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+data/
 
 # Build
 dist/
@@ -20,6 +21,9 @@ logs/
 .idea/
 *.sw?
 *.swp
+
+# Data
+data/
 
 # OS
 .DS_Store

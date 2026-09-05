@@ -21,12 +21,13 @@ export interface GrammarResponse {
 
 export async function explainVocabulary(
   selectedText: string,
-  context: AiContext
+  context: AiContext,
+  numExamples: number = 3,
 ): Promise<VocabularyResponse> {
   const res = await fetch(AI_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'vocabulary', selectedText, context }),
+    body: JSON.stringify({ type: 'vocabulary', selectedText, context, numExamples }),
   })
   if (!res.ok) throw new Error(`AI API error: ${res.status}`)
   return res.json()
@@ -35,7 +36,7 @@ export async function explainVocabulary(
 export async function explainGrammar(
   selectedText: string,
   context: AiContext,
-  question: string
+  question: string,
 ): Promise<GrammarResponse> {
   const res = await fetch(AI_API_URL, {
     method: 'POST',

@@ -10,6 +10,7 @@ import {
   type VocabularyResponse,
   type GrammarResponse,
 } from '@/lib/ai-api'
+import { useSettings } from '@/lib/settings-context'
 
 interface SubtitleTooltipProps {
   subtitles: { text: string; startTime: number; endTime: number }[]
@@ -39,6 +40,7 @@ export function SubtitleTooltip({
   const [grammarLoading, setGrammarLoading] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const { settings } = useSettings()
 
   const getContext = useCallback(
     (idx: number): AiContext => ({
@@ -90,7 +92,7 @@ export function SubtitleTooltip({
 
     try {
       const ctx = getContext(selection.subtitleIndex)
-      const result = await explainVocabulary(selection.text, ctx)
+      const result = await explainVocabulary(selection.text, ctx, settings.numExamples)
       setVocabResult(result)
     } catch {
       setVocabResult({
@@ -102,7 +104,7 @@ export function SubtitleTooltip({
     } finally {
       setVocabLoading(false)
     }
-  }, [selection, getContext])
+  }, [selection, getContext, settings.numExamples])
 
   // Handle grammar click
   const handleGrammarClick = useCallback(() => {
