@@ -97,7 +97,7 @@ export function TopBar() {
           >
             <SelectTrigger className="w-[70px]">
               <SelectValue>
-                {settings.numExamples ?? 3} ejemplos
+                {settings.numExamples ?? 3}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
