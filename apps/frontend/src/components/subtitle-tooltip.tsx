@@ -223,7 +223,7 @@ export function SubtitleTooltip({
                     {vocabResult.examples.map((ex, i) => (
                       <li
                         key={i}
-                        className="text-sm text-muted-foreground pl-3 border-l-2 border-border/40"
+                        className="text-sm text-muted-foreground pl-3 border-l-2 border-border"
                       >
                         {ex}
                       </li>

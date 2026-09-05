@@ -167,9 +167,9 @@ function Watch() {
                               isActive
                                 ? 'bg-primary/10 text-foreground font-medium border-l-2 border-primary'
                                 : 'text-muted-foreground'
-                            } ${i < subtitles.length - 1 ? 'border-b border-border/40' : ''}`}
+                            } ${i < subtitles.length - 1 ? 'border-b border-border' : ''}`}
                           >
-                            <span className="text-[10px] tabular-nums text-muted-foreground/60 mr-2">
+                            <span className="text-[10px] tabular-nums text-muted-foreground mr-2">
                               {formatTime(sub.startTime)}
                             </span>
                             {sub.text}

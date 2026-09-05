@@ -22,7 +22,7 @@ export function TopBar() {
   if (loading) return null
 
   return (
-    <div className="sticky top-0 z-40 border-b border-border/40 bg-background/80 backdrop-blur-md">
+    <div className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="mx-auto max-w-[1400px] flex items-center gap-6 px-4 sm:px-6 py-2.5 text-sm">
         {/* Logo / title */}
         <span className="font-semibold text-foreground mr-2 hidden sm:block">
@@ -39,7 +39,7 @@ export function TopBar() {
           <select
             value={settings.nativeLanguage}
             onChange={(e) => updateSettings({ nativeLanguage: e.target.value })}
-            className="bg-secondary text-foreground border border-border/40 rounded-md px-2 py-1 text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+            className="bg-secondary text-foreground border border-border rounded-md px-2 py-1 text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
           >
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>
@@ -57,7 +57,7 @@ export function TopBar() {
           <select
             value={settings.learnedLanguage}
             onChange={(e) => updateSettings({ learnedLanguage: e.target.value })}
-            className="bg-secondary text-foreground border border-border/40 rounded-md px-2 py-1 text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+            className="bg-secondary text-foreground border border-border rounded-md px-2 py-1 text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
           >
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>
@@ -77,7 +77,7 @@ export function TopBar() {
             onChange={(e) =>
               updateSettings({ numExamples: parseInt(e.target.value, 10) })
             }
-            className="bg-secondary text-foreground border border-border/40 rounded-md px-2 py-1 text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+            className="bg-secondary text-foreground border border-border rounded-md px-2 py-1 text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
           >
             {EXAMPLE_COUNTS.map((n) => (
               <option key={n} value={n}>
