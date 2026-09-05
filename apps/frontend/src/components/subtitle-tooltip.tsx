@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import Markdown from 'react-markdown'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
@@ -225,7 +226,7 @@ export function SubtitleTooltip({
 
       {/* Vocabulary dialog */}
       <Dialog open={vocabOpen} onOpenChange={setVocabOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[60vw] h-[60vh] max-w-none flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               📗 Vocabulario
@@ -238,12 +239,14 @@ export function SubtitleTooltip({
               <div className="animate-pulse">Consultando IA...</div>
             </div>
           ) : vocabResult ? (
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto flex-1">
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-1">
                   Definición
                 </h4>
-                <p className="text-sm">{vocabResult.definition}</p>
+                <div className="markdown-content text-sm leading-relaxed">
+                  <Markdown>{vocabResult.definition}</Markdown>
+                </div>
               </div>
 
               {vocabResult.examples.length > 0 && (
@@ -278,7 +281,7 @@ export function SubtitleTooltip({
           setGrammarSubtitleIndex(-1)
         }
       }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="w-[90vw] h-[85vh] max-w-none flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               📙 Gramática
@@ -293,8 +296,8 @@ export function SubtitleTooltip({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            {/* Input row + submit */}
+          {/* Input section - fixed at top */}
+          <div className="space-y-3 shrink-0">
             <div className="flex gap-2">
               <Input
                 placeholder="¿Qué quieres entender? Ej: ¿Por qué usa presente continuo?"
@@ -315,7 +318,6 @@ export function SubtitleTooltip({
               </Button>
             </div>
 
-            {/* Skip button */}
             <Button
               variant="ghost"
               className="w-full text-muted-foreground text-xs"
@@ -324,18 +326,22 @@ export function SubtitleTooltip({
             >
               ⏭️ Saltar — explicar todo sobre esta gramática
             </Button>
-
-            {/* Result */}
-            {grammarLoading ? (
-              <div className="py-8 text-center text-muted-foreground">
-                <div className="animate-pulse">Consultando IA...</div>
-              </div>
-            ) : grammarResult ? (
-              <div className="text-sm whitespace-pre-wrap leading-relaxed">
-                {grammarResult.explanation}
-              </div>
-            ) : null}
           </div>
+
+          {/* Result section - fills remaining space, scrollable */}
+          {grammarLoading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="animate-pulse text-muted-foreground">Consultando IA...</div>
+            </div>
+          ) : grammarResult ? (
+            <div className="flex-1 overflow-y-auto text-sm leading-relaxed markdown-content">
+              <Markdown>{grammarResult.explanation}</Markdown>
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+              Escribe una pregunta o haz click en "Saltar" para una explicación completa
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
