@@ -18,7 +18,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: ['http://localhost:5173', 'http://localhost:5174'],
-    methods: ['GET'],
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
   })
 
   await app.listen(3000)
