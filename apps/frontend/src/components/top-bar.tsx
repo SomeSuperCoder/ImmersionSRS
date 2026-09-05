@@ -1,4 +1,11 @@
 import { useSettings } from '@/lib/settings-context'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const LANGUAGES = [
   { code: 'es', label: 'Español' },
@@ -36,17 +43,21 @@ export function TopBar() {
           <label className="text-muted-foreground whitespace-nowrap">
             🌍 Nativo
           </label>
-          <select
-            value={settings.nativeLanguage}
-            onChange={(e) => updateSettings({ nativeLanguage: e.target.value })}
-            className="bg-secondary text-foreground border border-border rounded-md px-2 py-1 text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+          <Select
+            value={settings.nativeLanguage ?? 'es'}
+            onValueChange={(v) => v && updateSettings({ nativeLanguage: v })}
           >
-            {LANGUAGES.map((l) => (
-              <option key={l.code} value={l.code}>
-                {l.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LANGUAGES.map((l) => (
+                <SelectItem key={l.code} value={l.code}>
+                  {l.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Learned language */}
@@ -54,17 +65,21 @@ export function TopBar() {
           <label className="text-muted-foreground whitespace-nowrap">
             📚 Aprendiendo
           </label>
-          <select
-            value={settings.learnedLanguage}
-            onChange={(e) => updateSettings({ learnedLanguage: e.target.value })}
-            className="bg-secondary text-foreground border border-border rounded-md px-2 py-1 text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+          <Select
+            value={settings.learnedLanguage ?? 'en'}
+            onValueChange={(v) => v && updateSettings({ learnedLanguage: v })}
           >
-            {LANGUAGES.map((l) => (
-              <option key={l.code} value={l.code}>
-                {l.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LANGUAGES.map((l) => (
+                <SelectItem key={l.code} value={l.code}>
+                  {l.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Number of examples */}
@@ -72,19 +87,21 @@ export function TopBar() {
           <label className="text-muted-foreground whitespace-nowrap">
             📝 Ejemplos
           </label>
-          <select
-            value={settings.numExamples}
-            onChange={(e) =>
-              updateSettings({ numExamples: parseInt(e.target.value, 10) })
-            }
-            className="bg-secondary text-foreground border border-border rounded-md px-2 py-1 text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+          <Select
+            value={String(settings.numExamples ?? 3)}
+            onValueChange={(v) => v && updateSettings({ numExamples: parseInt(v, 10) })}
           >
-            {EXAMPLE_COUNTS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-[70px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {EXAMPLE_COUNTS.map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {settings.numExamples >= 4 && (
             <p className="text-xs text-yellow-500/80 whitespace-nowrap">
               ⚠️ Alto uso de tokens
