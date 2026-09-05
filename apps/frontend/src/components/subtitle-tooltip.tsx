@@ -226,7 +226,7 @@ export function SubtitleTooltip({
 
       {/* Vocabulary dialog */}
       <Dialog open={vocabOpen} onOpenChange={setVocabOpen}>
-        <DialogContent className="w-[60vw] h-[60vh] max-w-none flex flex-col">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               📗 Vocabulario
@@ -281,7 +281,7 @@ export function SubtitleTooltip({
           setGrammarSubtitleIndex(-1)
         }
       }}>
-        <DialogContent className="w-[90vw] h-[85vh] max-w-none flex flex-col">
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               📙 Gramática
