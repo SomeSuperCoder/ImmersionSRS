@@ -65,7 +65,7 @@ export class AiService implements OnModuleInit {
     const lang = req.nativeLanguage ?? 'es'
     const level = req.explanationLevel ?? 'simple'
     if (req.type === 'vocabulary') {
-      return vocabularyPrompt(req.selectedText, req.context, req.numExamples, lang)
+      return vocabularyPrompt(req.selectedText, req.context, req.numExamples, lang, level)
     }
     if (req.type === 'grammar_auto') {
       return grammarAutoPrompt(req.selectedText, req.context, lang, level)

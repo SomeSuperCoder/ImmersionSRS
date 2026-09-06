@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import Markdown from 'react-markdown'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import {
   explainVocabulary,
@@ -228,10 +228,7 @@ export function SubtitleTooltip({
       <Dialog open={vocabOpen} onOpenChange={setVocabOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              📗 Vocabulario
-              {vocabResult && <Badge variant="secondary"><span className="block max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap">{vocabResult.word}</span></Badge>}
-            </DialogTitle>
+            <DialogTitle className="text-lg">📖 Vocabulario</DialogTitle>
           </DialogHeader>
 
           {vocabLoading ? (
@@ -240,12 +237,34 @@ export function SubtitleTooltip({
             </div>
           ) : vocabResult ? (
             <div className="space-y-4 overflow-y-auto flex-1">
+              {/* Selected form section — only shown when conjugated */}
+              {vocabResult.selectedForm && vocabResult.selectedForm !== vocabResult.word && (
+                <div>
+                  <Badge variant="outline" className="mb-2">
+                    {vocabResult.selectedForm}
+                  </Badge>
+                  <div className="markdown-content text-sm leading-relaxed">
+                    <Markdown>{vocabResult.definition}</Markdown>
+                  </div>
+                </div>
+              )}
+
+              {/* Infinitive section */}
               <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                  Definición
-                </h4>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="secondary">
+                    <span className="block max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap">{vocabResult.word}</span>
+                  </Badge>
+                  {vocabResult.selectedForm && vocabResult.selectedForm !== vocabResult.word && (
+                    <span className="text-xs text-muted-foreground">← infinitivo</span>
+                  )}
+                </div>
                 <div className="markdown-content text-sm leading-relaxed">
-                  <Markdown>{vocabResult.definition}</Markdown>
+                  <Markdown>
+                    {vocabResult.selectedForm && vocabResult.selectedForm !== vocabResult.word
+                      ? vocabResult.infinitiveDefinition ?? vocabResult.definition
+                      : vocabResult.definition}
+                  </Markdown>
                 </div>
               </div>
 
@@ -268,6 +287,12 @@ export function SubtitleTooltip({
               )}
             </div>
           ) : null}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVocabOpen(false)} className="text-xs">
+              Cerrar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

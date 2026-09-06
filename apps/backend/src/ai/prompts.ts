@@ -46,22 +46,36 @@ export function vocabularyPrompt(
   ctx: PromptContext,
   numExamples: number = 3,
   nativeLanguage: string = 'es',
+  explanationLevel: string = 'simple',
 ): ChatMessage[] {
   const contextBlock = buildContextBlock(ctx)
+
+  const levelInstructions = explanationLevel === 'profound'
+    ? `Provide a PROFOUND analysis: etymology, morphological breakdown, register/formality, dialectal variations, usage frequency, collocations. Use linguistic terminology.`
+    : `Keep it SIMPLE and practical. Explain like talking to a friend learning the language. Focus on: what it means, how to use it, common mistakes. Short paragraphs. No jargon.`
 
   return [
     {
       role: 'system',
       content: `You are a language tutor. The user's native language is ${nativeLanguage}. The user is watching a video and wants to understand a word in context.
 
+${levelInstructions}
+
 Respond ONLY with valid JSON (no markdown, no code fences). Answer in ${nativeLanguage}:
 {
-  "word": "the selected word",
-  "definition": "clear contextual definition of the word as used in this sentence",
+  "word": "the infinitive (base form) of the selected word",
+  "selectedForm": "the exact word the user selected",
+  "definition": "the selected form's meaning and grammatical role in this context",
+  "infinitiveDefinition": "the infinitive's basic meaning and conjugation class",
   "examples": ["${numExamples} example sentences using the same word with the same meaning, each in a different realistic context"]
 }
 
-Be concise. The definition should match how the word is used in THIS specific context, not all possible meanings.`,
+Rules:
+- The "word" field MUST be the infinitive (base form) of the selected word.
+- The "selectedForm" field is the exact word the user selected.
+- The "definition" field explains the selected form's meaning in context.
+- The "infinitiveDefinition" field explains the infinitive's basic meaning.
+- If the selected word is already an infinitive, set selectedForm equal to word and provide one combined definition.`,
     },
     {
       role: 'user',

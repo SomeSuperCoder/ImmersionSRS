@@ -9,8 +9,10 @@ export interface AiContext {
 
 export interface VocabularyResponse {
   type: 'vocabulary'
-  word: string
-  definition: string
+  word: string           // the infinitive
+  selectedForm?: string  // the original selected word (may differ from word)
+  definition: string     // explanation of the selected form
+  infinitiveDefinition?: string  // explanation of the infinitive (if different from selectedForm)
   examples: string[]
 }
 
