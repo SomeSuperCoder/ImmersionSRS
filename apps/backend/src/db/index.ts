@@ -20,9 +20,17 @@ sqlite.exec(`
     native_language TEXT NOT NULL DEFAULT 'es',
     learned_language TEXT NOT NULL DEFAULT 'en',
     num_examples INTEGER NOT NULL DEFAULT 3,
+    explanation_level TEXT NOT NULL DEFAULT 'simple',
     updated_at TEXT NOT NULL DEFAULT ''
   )
 `)
+
+// Migration: add explanation_level if missing (from older DBs)
+try {
+  sqlite.exec(`ALTER TABLE user_settings ADD COLUMN explanation_level TEXT NOT NULL DEFAULT 'simple'`)
+} catch {
+  // Column already exists — ignore
+}
 
 const existing = db.select().from(userSettings).all()
 if (existing.length === 0) {
@@ -31,6 +39,7 @@ if (existing.length === 0) {
     nativeLanguage: 'es',
     learnedLanguage: 'en',
     numExamples: 3,
+    explanationLevel: 'simple',
     updatedAt: new Date().toISOString(),
   }).run()
   appLogger.info('Seeded default user settings')
