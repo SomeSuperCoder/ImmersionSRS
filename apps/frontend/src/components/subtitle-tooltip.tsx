@@ -288,7 +288,7 @@ export function SubtitleTooltip({
               {grammarSelectedText && (
                 <Badge variant="outline" className="text-xs">
                   <span className="block max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap">
-                    "{grammarSelectedText}"
+                    {grammarSelectedText}
                   </span>
                 </Badge>
               )}
