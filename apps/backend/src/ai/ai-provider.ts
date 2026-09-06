@@ -34,6 +34,14 @@ export class GroqProvider implements ChatProvider {
       throw new Error('No GROQ_API_KEY configured')
     }
 
+    const body = {
+      model: this.model,
+      messages,
+      temperature: 0.7,
+      max_tokens: 800,
+    }
+    appLogger.debug({ model: this.model, messageCount: messages.length }, '[Groq] Sending request')
+
     // Use undici fetch DIRECTLY — no proxy for Groq
     const response = await undiciFetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -41,12 +49,7 @@ export class GroqProvider implements ChatProvider {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`,
       },
-      body: JSON.stringify({
-        model: this.model,
-        messages,
-        temperature: 0.7,
-        max_tokens: 800,
-      }),
+      body: JSON.stringify(body),
     })
 
     if (!response.ok) {
