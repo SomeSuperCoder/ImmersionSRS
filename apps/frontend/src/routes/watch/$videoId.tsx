@@ -1,6 +1,7 @@
 import { createFileRoute, useParams } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   fetchSubtitles,
   type Subtitle,
@@ -36,14 +37,37 @@ function Watch() {
   const [isLoadingSubs, setIsLoadingSubs] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(-1)
+  const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
+
+  const fetchSubtitlesWithRetry = async (url: string, lang: string, maxRetries = 3) => {
+    let lastError: Error | null = null
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await fetchSubtitles(url, lang)
+        return result
+      } catch (err) {
+        lastError = err as Error
+        console.warn(`[Subtitles] Attempt ${attempt}/${maxRetries} failed:`, lastError.message)
+        if (attempt < maxRetries) {
+          // Wait before retry (1s, 2s, 3s)
+          await new Promise(r => setTimeout(r, attempt * 1000))
+        }
+      }
+    }
+
+    throw lastError || new Error('Failed to fetch subtitles after retries')
+  }
 
   // Fetch real subtitles
   useEffect(() => {
     const lang = settings.learnedLanguage || 'es'
     logger.info('Watch', `Fetching subtitles for videoId=${videoId}, lang=${lang}`)
     setIsLoadingSubs(true)
+    setError(null)
 
-    fetchSubtitles(videoId, lang)
+    fetchSubtitlesWithRetry(videoId, lang)
       .then((subs) => {
         logger.info('Watch', `Loaded ${subs.length} subtitle segments`, { videoId, count: subs.length })
         setSubtitles(subs)
@@ -51,9 +75,10 @@ function Watch() {
       })
       .catch((err) => {
         logger.error('Watch', `Failed to fetch subtitles: ${err}`, { videoId, error: String(err) })
+        setError(String(err))
         setIsLoadingSubs(false)
       })
-  }, [videoId, settings.learnedLanguage])
+  }, [videoId, settings.learnedLanguage, retryCount])
 
   // Reset current index when subtitles change
   useEffect(() => {
@@ -152,6 +177,22 @@ function Watch() {
                       <p className="text-sm text-muted-foreground">
                         Cargando subtítulos...
                       </p>
+                    </div>
+                  ) : error ? (
+                    <div className="p-4 text-center text-muted-foreground">
+                      <p>{error}</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => {
+                          setError(null)
+                          setSubtitles([])
+                          setRetryCount(prev => prev + 1)
+                        }}
+                      >
+                        🔄 Try again
+                      </Button>
                     </div>
                   ) : subtitles.length === 0 ? (
                     <div className="flex items-center justify-center h-32">
