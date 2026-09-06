@@ -177,7 +177,7 @@ function Watch() {
                                 : 'text-muted-foreground'
                             } ${i < subtitles.length - 1 ? 'border-b border-border' : ''}`}
                           >
-                            <span className="text-[10px] tabular-nums text-muted-foreground mr-2">
+                            <span className="text-[10px] tabular-nums text-muted-foreground mr-2 select-none">
                               {formatTime(sub.startTime)}
                             </span>
                             {sub.text}
