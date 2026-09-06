@@ -48,9 +48,9 @@ export class GroqProvider implements ChatProvider {
     })
 
     if (!response.ok) {
-      const error = new Error(`Groq API error: ${response.status} ${response.statusText}`)
-      // Re-throw as-is so caller can distinguish (e.g., rate limit 429)
-      throw error
+      const errorBody = await response.text()
+      appLogger.error({ status: response.status, body: errorBody }, '[Groq] API error')
+      throw new Error(`Groq API error: ${response.status} ${response.statusText}`)
     }
 
     const data = await response.json() as any
