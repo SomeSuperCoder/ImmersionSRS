@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
+import { fetch as undiciFetch } from 'undici'
 import { proxyFetch } from '../proxy-fetch.js'
 import { appLogger } from '../logger/logger.module.js'
 import type { ChatMessage } from './prompts.js'
@@ -33,7 +34,8 @@ export class GroqProvider implements ChatProvider {
       throw new Error('No GROQ_API_KEY configured')
     }
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    // Use undici fetch DIRECTLY — no proxy for Groq
+    const response = await undiciFetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
