@@ -99,6 +99,7 @@ export class FallbackChain {
   constructor(providers: ChatProvider[]) {
     this.providers = providers
     this.fallbacksPath = path.resolve(process.cwd(), 'fallbacks.json')
+    appLogger.info({ path: this.fallbacksPath }, '[FallbackChain] Initializing')
     this.loadFallbacks()
     this.saveFallbacks() // ensure file always exists
   }
@@ -112,7 +113,7 @@ export class FallbackChain {
         return { result, provider: provider.name }
       } catch (err) {
         lastError = err as Error
-        console.warn(`[AI] Provider ${provider.name} failed: ${lastError.message}`)
+        appLogger.warn({ provider: provider.name, error: lastError.message }, '[FallbackChain] Provider failed')
 
         // Count this as a fallback (failure that triggers replacement)
         if (this.fallbackCounts[provider.name] !== undefined) {
@@ -145,8 +146,9 @@ export class FallbackChain {
   private saveFallbacks() {
     try {
       fs.writeFileSync(this.fallbacksPath, JSON.stringify(this.fallbackCounts, null, 2))
+      appLogger.debug({ path: this.fallbacksPath, counts: this.fallbackCounts }, '[FallbackChain] Saved fallback counts')
     } catch (err) {
-      console.error('[AI] Failed to save fallback counts:', err)
+      appLogger.error({ path: this.fallbacksPath, error: String(err) }, '[FallbackChain] Failed to save fallback counts')
     }
   }
 }
