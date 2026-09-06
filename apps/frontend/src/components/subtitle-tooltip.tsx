@@ -226,7 +226,7 @@ export function SubtitleTooltip({
 
       {/* Vocabulary dialog */}
       <Dialog open={vocabOpen} onOpenChange={setVocabOpen}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-md sm:max-w-md max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-lg">📖 Vocabulario</DialogTitle>
           </DialogHeader>
@@ -243,7 +243,7 @@ export function SubtitleTooltip({
                   <Badge variant="outline" className="mb-2">
                     {vocabResult.selectedForm}
                   </Badge>
-                  <div className="markdown-content text-sm leading-relaxed break-words">
+                  <div className="markdown-content text-sm leading-relaxed break-words whitespace-pre-wrap">
                     <Markdown>{vocabResult.definition}</Markdown>
                   </div>
                 </div>
@@ -259,7 +259,7 @@ export function SubtitleTooltip({
                     <span className="text-xs text-muted-foreground">← infinitivo</span>
                   )}
                 </div>
-                <div className="markdown-content text-sm leading-relaxed break-words">
+                <div className="markdown-content text-sm leading-relaxed break-words whitespace-pre-wrap">
                   <Markdown>
                     {vocabResult.selectedForm && vocabResult.selectedForm !== vocabResult.word
                       ? vocabResult.infinitiveDefinition ?? vocabResult.definition
