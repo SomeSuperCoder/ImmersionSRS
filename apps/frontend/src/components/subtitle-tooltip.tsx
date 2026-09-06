@@ -230,7 +230,7 @@ export function SubtitleTooltip({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               📗 Vocabulario
-              {vocabResult && <Badge variant="secondary" className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">{vocabResult.word}</Badge>}
+              {vocabResult && <Badge variant="secondary"><span className="block max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap">{vocabResult.word}</span></Badge>}
             </DialogTitle>
           </DialogHeader>
 
@@ -286,8 +286,10 @@ export function SubtitleTooltip({
             <DialogTitle className="flex items-center gap-2">
               📙 Gramática
               {grammarSelectedText && (
-                <Badge variant="outline" className="text-xs max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
-                  "{grammarSelectedText}"
+                <Badge variant="outline" className="text-xs">
+                  <span className="block max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap">
+                    "{grammarSelectedText}"
+                  </span>
                 </Badge>
               )}
             </DialogTitle>
