@@ -28,6 +28,9 @@ lerna-debug.log*
 # Internal coordination (Tech Lead)
 data/
 
+# Runtime state
+fallbacks.json
+
 # IDE
 .vscode/*
 !.vscode/extensions.json
