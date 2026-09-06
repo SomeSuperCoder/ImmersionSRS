@@ -1,6 +1,5 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import Groq from 'groq-sdk'
 import { proxyFetch } from '../proxy-fetch.js'
 import { appLogger } from '../logger/logger.module.js'
 import type { ChatMessage } from './prompts.js'
@@ -21,25 +20,40 @@ export interface ProviderConfig {
 
 export class GroqProvider implements ChatProvider {
   name = 'groq'
-  private client: Groq
+  private apiKey: string
 
   constructor(apiKey: string | undefined) {
-    this.client = new Groq({ apiKey: apiKey ?? '' })
+    this.apiKey = apiKey ?? ''
   }
 
   async chat(messages: ChatMessage[]): Promise<string> {
-    if (!this.client.apiKey) {
+    if (!this.apiKey) {
       throw new Error('No GROQ_API_KEY configured')
     }
 
-    const response = await this.client.chat.completions.create({
-      model: 'qwen/qwen3.6-27b',
-      messages,
-      temperature: 0.7,
-      max_tokens: 800,
+    // Groq REQUIRES the proxy from this network — use proxyFetch
+    const response = await proxyFetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'qwen/qwen3.6-27b',
+        messages,
+        temperature: 0.7,
+        max_tokens: 800,
+      }),
     })
 
-    return response.choices?.[0]?.message?.content ?? ''
+    if (!response.ok) {
+      const errorBody = await response.text()
+      appLogger.error({ status: response.status, body: errorBody }, '[Groq] API error')
+      throw new Error(`Groq API error: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json() as any
+    return data.choices?.[0]?.message?.content ?? ''
   }
 }
 
