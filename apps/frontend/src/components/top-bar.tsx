@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 const LANGUAGES = [
   { code: 'es', label: 'Español' },
@@ -126,14 +127,34 @@ export function TopBar() {
           >
             <SelectTrigger className="w-[160px]">
               <SelectValue>
-                {settings.explanationLevel === 'profound' ? 'Lingüístico' : 'Inmersión'}
+                {settings.explanationLevel === 'profound' ? 'Lingüístico' : 'Pleno/Sencillo'}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="simple">🎒 Inmersión</SelectItem>
+              <SelectItem value="simple">🎒 Pleno/Sencillo</SelectItem>
               <SelectItem value="profound">🎓 Lingüístico</SelectItem>
             </SelectContent>
           </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="inline-flex items-center justify-center h-7 w-7 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
+                ?
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-80 text-sm">
+              <div className="space-y-2">
+                <p className="font-medium">Modos de explicación</p>
+                <div>
+                  <p className="font-medium text-primary">🎒 Pleno/Sencillo</p>
+                  <p className="text-muted-foreground">Explicaciones simples y prácticas. Como hablar con un amigo que sabe del idioma. Sin jerga lingüística.</p>
+                </div>
+                <div>
+                  <p className="font-medium text-primary">🎓 Lingüístico</p>
+                  <p className="text-muted-foreground">Análisis profundo: etimología, morfología, sintaxis, registro, variaciones dialectales. Para quien quiere entender la lengua a fondo.</p>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
     </div>
