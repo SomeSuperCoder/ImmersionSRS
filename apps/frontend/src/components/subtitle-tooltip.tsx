@@ -133,7 +133,7 @@ export function SubtitleTooltip({
 
     try {
       const ctx = getContext(grammarSubtitleIndex)
-      const result = await explainGrammar(grammarSelectedText, ctx, grammarQuestion, settings.nativeLanguage)
+      const result = await explainGrammar(grammarSelectedText, ctx, grammarQuestion, settings.nativeLanguage, settings.explanationLevel)
       setGrammarResult(result)
     } catch {
       setGrammarResult({
@@ -143,7 +143,7 @@ export function SubtitleTooltip({
     } finally {
       setGrammarLoading(false)
     }
-  }, [grammarSelectedText, grammarSubtitleIndex, grammarQuestion, getContext])
+  }, [grammarSelectedText, grammarSubtitleIndex, grammarQuestion, getContext, settings.nativeLanguage, settings.explanationLevel])
 
   // Handle skip — auto-explain everything
   const handleGrammarSkip = useCallback(async () => {
@@ -155,7 +155,7 @@ export function SubtitleTooltip({
 
     try {
       const ctx = getContext(grammarSubtitleIndex)
-      const result = await explainGrammarAuto(grammarSelectedText, ctx, settings.nativeLanguage)
+      const result = await explainGrammarAuto(grammarSelectedText, ctx, settings.nativeLanguage, settings.explanationLevel)
       setGrammarResult(result)
     } catch {
       setGrammarResult({
@@ -165,7 +165,7 @@ export function SubtitleTooltip({
     } finally {
       setGrammarLoading(false)
     }
-  }, [grammarSelectedText, grammarSubtitleIndex, getContext])
+  }, [grammarSelectedText, grammarSubtitleIndex, getContext, settings.nativeLanguage, settings.explanationLevel])
 
   // Close selection on click outside
   useEffect(() => {

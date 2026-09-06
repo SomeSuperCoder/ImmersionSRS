@@ -5,12 +5,14 @@ export interface AppSettings {
   nativeLanguage: string
   learnedLanguage: string
   numExamples: number
+  explanationLevel: string
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
   nativeLanguage: 'es',
   learnedLanguage: 'en',
   numExamples: 3,
+  explanationLevel: 'simple',
 }
 
 const SettingsContext = createContext<{

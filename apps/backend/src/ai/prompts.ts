@@ -79,17 +79,26 @@ export function grammarPrompt(
   ctx: PromptContext,
   question: string,
   nativeLanguage: string = 'es',
+  explanationLevel: string = 'simple',
 ): ChatMessage[] {
   const contextBlock = buildContextBlock(ctx)
+
+  const levelInstructions = explanationLevel === 'profound'
+    ? `Provide a PROFOUND linguistic analysis: etymology, morphological breakdown, syntactic role, comparison with related structures, register/formality level, dialectal variations. Use linguistic terminology.`
+    : `Keep it SIMPLE and practical. Explain like talking to a friend learning the language. Focus on: what it means, how to use it, 1-2 common mistakes. No linguistic jargon. Short paragraphs.`
 
   return [
     {
       role: 'system',
-      content: `You are a language tutor. The user's native language is ${nativeLanguage}. The user is watching a video and has a grammar question about a sentence. Explain clearly and concisely in plain text. Use examples if helpful. Answer in ${nativeLanguage}.`,
+      content: `You are a language tutor. The user's native language is ${nativeLanguage}. Answer in ${nativeLanguage}.
+
+${levelInstructions}
+
+Be concise. No unnecessary filler.`,
     },
     {
       role: 'user',
-      content: `Context:\n${contextBlock}\n\nUser question: "${question}"`,
+      content: `Context:\n${contextBlock}\n\nQuestion: "${question}"`,
     },
   ]
 }
@@ -102,28 +111,26 @@ export function grammarAutoPrompt(
   selectedText: string,
   ctx: PromptContext,
   nativeLanguage: string = 'es',
+  explanationLevel: string = 'simple',
 ): ChatMessage[] {
   const contextBlock = buildContextBlock(ctx)
+
+  const levelInstructions = explanationLevel === 'profound'
+    ? `Provide PROFOUND linguistic analysis: etymology, morphological breakdown, syntactic function, paradigm, register, dialectal variants. Use linguistic terminology. Be thorough.`
+    : `Keep it SIMPLE. Explain like a helpful friend. Cover: what it means, how to use it, 1-2 common mistakes. Short. Practical. No jargon.`
 
   return [
     {
       role: 'system',
-      content: `You are a language tutor. The user's native language is ${nativeLanguage}. The user is watching a video and selected a phrase they don't fully understand. Your job is to explain EVERYTHING they might not understand about this grammar.
+      content: `You are a language tutor. Native language: ${nativeLanguage}. Answer in ${nativeLanguage}.
 
-Cover ALL of the following as relevant:
-- Tense and why it's used here
-- Conjugation details
-- Any irregular forms
-- How this grammar pattern works in general
-- How to form similar sentences
-- Common mistakes learners make with this pattern
-- 2-3 usage examples in different contexts
+${levelInstructions}
 
-Be thorough but organized. Use headers or bullet points for readability. Answer in ${nativeLanguage}.`,
+Be concise. Maximum 200 words.`,
     },
     {
       role: 'user',
-      content: `Context:\n${contextBlock}\n\nSelected phrase: "${selectedText}"\n\nExplain everything about this grammar that a language learner might not understand.`,
+      content: `Context:\n${contextBlock}\n\nPhrase: "${selectedText}"`,
     },
   ]
 }

@@ -114,6 +114,27 @@ export function TopBar() {
             </p>
           )}
         </div>
+
+        {/* Explanation level */}
+        <div className="flex items-center gap-2">
+          <label className="text-muted-foreground whitespace-nowrap">
+            📖 Modo
+          </label>
+          <Select
+            value={settings.explanationLevel ?? 'simple'}
+            onValueChange={(v) => updateSettings({ explanationLevel: v })}
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue>
+                {settings.explanationLevel === 'profound' ? 'Lingüístico' : 'Inmersión'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="simple">🎒 Inmersión</SelectItem>
+              <SelectItem value="profound">🎓 Lingüístico</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </div>
   )
