@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common'
-import { proxyFetch } from '../proxy-fetch.js'
+import { Injectable, OnModuleInit } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { appLogger } from '../logger/logger.module.js'
 import { vocabularyPrompt, grammarPrompt, grammarAutoPrompt, type ChatMessage } from './prompts.js'
+import { GroqProvider, OpenCodeZenProvider, FallbackChain } from './ai-provider.js'
 
 export interface AiRequest {
   type: 'vocabulary' | 'grammar' | 'grammar_auto'
@@ -19,31 +20,38 @@ export interface AiRequest {
 }
 
 @Injectable()
-export class AiService {
-  private readonly apiUrl = 'https://opencode.ai/zen/v1/chat/completions'
+export class AiService implements OnModuleInit {
+  private chain!: FallbackChain
+
+  constructor(private config: ConfigService) {}
+
+  onModuleInit() {
+    const providers: any[] = []
+
+    // Groq first (if API key provided)
+    const groqKey = this.config.get<string>('GROQ_API_KEY')
+    if (groqKey) {
+      providers.push(new GroqProvider(groqKey))
+      appLogger.info('Groq provider enabled (primary)')
+    } else {
+      appLogger.info('Groq API key not set, skipping Groq provider')
+    }
+
+    // OpenCode Zen as fallback
+    const opencodeModel = this.config.get<string>('OPENCODE_ZEN_MODEL') ?? 'big-pickle'
+    providers.push(new OpenCodeZenProvider(opencodeModel))
+    appLogger.info({ model: opencodeModel }, 'OpenCode Zen provider enabled (fallback)')
+
+    this.chain = new FallbackChain(providers)
+  }
 
   async explain(req: AiRequest): Promise<any> {
     const messages = this.buildMessages(req)
     appLogger.info({ type: req.type, selectedText: req.selectedText }, 'AI explain request')
 
     try {
-      const response = await proxyFetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'opencode/1.18.15',
-        },
-        body: JSON.stringify({
-          model: 'big-pickle',
-          messages,
-          temperature: 0.7,
-        }),
-      })
-
-      const data = await response.json() as any
-      const content = data.choices?.[0]?.message?.content ?? ''
-
-      appLogger.info({ type: req.type, responseLength: content.length }, 'AI response received')
+      const { result: content, provider } = await this.chain.chat(messages)
+      appLogger.info({ type: req.type, responseLength: content.length, provider }, 'AI response received')
 
       if (req.type === 'vocabulary') {
         return this.parseVocabulary(content, req.selectedText)
