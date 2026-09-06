@@ -98,9 +98,9 @@ export class FallbackChain {
 
   constructor(providers: ChatProvider[]) {
     this.providers = providers
-    this.fallbackCounts = { groq: 0, opencode_zen: 0 }
     this.fallbacksPath = path.resolve(process.cwd(), 'fallbacks.json')
     this.loadFallbacks()
+    this.saveFallbacks() // ensure file always exists
   }
 
   async chat(messages: ChatMessage[]): Promise<{ result: string; provider: string }> {
@@ -133,9 +133,12 @@ export class FallbackChain {
   private loadFallbacks() {
     try {
       const data = fs.readFileSync(this.fallbacksPath, 'utf-8')
-      this.fallbackCounts = JSON.parse(data)
+      const loaded = JSON.parse(data)
+      // Merge with defaults so new providers get counted
+      this.fallbackCounts = { groq: 0, opencode_zen: 0, ...loaded }
     } catch {
       // File doesn't exist yet, use defaults
+      this.fallbackCounts = { groq: 0, opencode_zen: 0 }
     }
   }
 
