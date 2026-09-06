@@ -74,8 +74,10 @@ export class AiService implements OnModuleInit {
   }
 
   private parseVocabulary(content: string, selectedText: string): any {
+    // Strip <think>...</think> tags that Qwen models emit before JSON parsing
+    const cleaned = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
     try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/)
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0])
         return { type: 'vocabulary', ...parsed }

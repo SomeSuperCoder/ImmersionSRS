@@ -226,7 +226,7 @@ export function SubtitleTooltip({
 
       {/* Vocabulary dialog */}
       <Dialog open={vocabOpen} onOpenChange={setVocabOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-lg">📖 Vocabulario</DialogTitle>
           </DialogHeader>
@@ -236,14 +236,14 @@ export function SubtitleTooltip({
               <div className="animate-pulse">Consultando IA...</div>
             </div>
           ) : vocabResult ? (
-            <div className="space-y-4 overflow-y-auto flex-1">
+            <div className="space-y-4 overflow-y-auto flex-1 min-h-0">
               {/* Selected form section — only shown when conjugated */}
               {vocabResult.selectedForm && vocabResult.selectedForm !== vocabResult.word && (
                 <div>
                   <Badge variant="outline" className="mb-2">
                     {vocabResult.selectedForm}
                   </Badge>
-                  <div className="markdown-content text-sm leading-relaxed">
+                  <div className="markdown-content text-sm leading-relaxed break-words">
                     <Markdown>{vocabResult.definition}</Markdown>
                   </div>
                 </div>
@@ -259,7 +259,7 @@ export function SubtitleTooltip({
                     <span className="text-xs text-muted-foreground">← infinitivo</span>
                   )}
                 </div>
-                <div className="markdown-content text-sm leading-relaxed">
+                <div className="markdown-content text-sm leading-relaxed break-words">
                   <Markdown>
                     {vocabResult.selectedForm && vocabResult.selectedForm !== vocabResult.word
                       ? vocabResult.infinitiveDefinition ?? vocabResult.definition
@@ -277,7 +277,7 @@ export function SubtitleTooltip({
                     {vocabResult.examples.map((ex, i) => (
                       <li
                         key={i}
-                        className="text-sm text-muted-foreground pl-3 border-l-2 border-border"
+                        className="text-sm text-muted-foreground pl-3 border-l-2 border-border break-words"
                       >
                         {ex}
                       </li>

@@ -4,6 +4,11 @@ import { proxyFetch } from '../proxy-fetch.js'
 import { appLogger } from '../logger/logger.module.js'
 import type { ChatMessage } from './prompts.js'
 
+/** Strip `<think>...</think>` tags from AI responses (Qwen models emit these). */
+function stripThinkingTags(content: string): string {
+  return content.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+}
+
 export interface ChatProvider {
   name: string
   chat(messages: ChatMessage[]): Promise<string>
@@ -53,7 +58,7 @@ export class GroqProvider implements ChatProvider {
     }
 
     const data = await response.json() as any
-    return data.choices?.[0]?.message?.content ?? ''
+    return stripThinkingTags(data.choices?.[0]?.message?.content ?? '')
   }
 }
 
@@ -84,7 +89,7 @@ export class OpenCodeZenProvider implements ChatProvider {
     })
 
     const data = await response.json() as any
-    return data.choices?.[0]?.message?.content ?? ''
+    return stripThinkingTags(data.choices?.[0]?.message?.content ?? '')
   }
 }
 
