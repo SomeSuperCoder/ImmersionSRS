@@ -43,6 +43,7 @@ export class GroqProvider implements ChatProvider {
         model: this.model,
         messages,
         temperature: 0.7,
+        max_tokens: 800,
       }),
     })
 
