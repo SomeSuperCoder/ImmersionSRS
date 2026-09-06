@@ -23,15 +23,16 @@ export class GroqProvider implements ChatProvider {
   private apiKey: string
   private model: string
 
-  constructor(apiKey: string, model = 'qwen/qwen3.6-27b') {
-    if (!apiKey) {
-      throw new Error('[AI] Groq API key is required')
-    }
-    this.apiKey = apiKey
+  constructor(apiKey: string | undefined, model = 'qwen/qwen3.6-27b') {
+    this.apiKey = apiKey ?? ''
     this.model = model
   }
 
   async chat(messages: ChatMessage[]): Promise<string> {
+    if (!this.apiKey) {
+      throw new Error('No GROQ_API_KEY configured')
+    }
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {

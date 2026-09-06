@@ -26,23 +26,16 @@ export class AiService implements OnModuleInit {
   constructor(private config: ConfigService) {}
 
   onModuleInit() {
-    const providers: any[] = []
-
-    // Groq first (if API key provided)
+    // Groq ALWAYS first — if no API key, chat() throws → fallback to OpenCode
     const groqKey = this.config.get<string>('GROQ_API_KEY')
-    if (groqKey) {
-      providers.push(new GroqProvider(groqKey))
-      appLogger.info('Groq provider enabled (primary)')
-    } else {
-      appLogger.info('Groq API key not set, skipping Groq provider')
-    }
+    const providers: any[] = [new GroqProvider(groqKey)]
 
     // OpenCode Zen as fallback
     const opencodeModel = this.config.get<string>('OPENCODE_ZEN_MODEL') ?? 'big-pickle'
     providers.push(new OpenCodeZenProvider(opencodeModel))
-    appLogger.info({ model: opencodeModel }, 'OpenCode Zen provider enabled (fallback)')
 
     this.chain = new FallbackChain(providers)
+    appLogger.info({ groq: !!groqKey, opencodeModel }, 'AI providers initialized')
   }
 
   async explain(req: AiRequest): Promise<any> {
