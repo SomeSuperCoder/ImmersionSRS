@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
+import { fileURLToPath } from 'url'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { proxyFetch } from '../proxy-fetch.js'
@@ -7,6 +8,9 @@ import { appLogger } from '../logger/logger.module.js'
 import type { ChatMessage } from './prompts.js'
 
 const execAsync = promisify(exec)
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 /** Strip `<think>...</think>` tags from AI responses (Qwen models emit these). */
 export function stripThinkingTags(content: string): string {
