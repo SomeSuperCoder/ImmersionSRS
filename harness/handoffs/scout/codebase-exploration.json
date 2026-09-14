@@ -1,0 +1,46 @@
+{
+  "headers": {
+    "timestamp": "2026-09-14T07:52:12Z",
+    "agent_id": "scout"
+  },
+  "data": {
+    "shared": {
+      "key_facts": [
+        "Project: ImmersionSRS — a YouTube-based language immersion tool with AI explanations",
+        "Architecture: pnpm monorepo with apps/backend (NestJS+SQLite) and apps/frontend (React+Vite+TanStack Router)",
+        "Backend runs on port 3000, frontend dev on port 5173/5174, CORS enabled for both",
+        "AI providers: Groq (primary, qwen/qwen3.6-27b via proxy 127.0.0.1:10809) + OpenCode Zen (fallback, big-pickle model)",
+        "OpenCode integration: Backend calls https://opencode.ai/zen/v1/chat/completions as fallback AI provider",
+        "OpenCode integration: env var OPENCODE_ZEN_MODEL configures fallback model (default: big-pickle)",
+        "Database: better-sqlite3 with Drizzle ORM, two tables: user_settings and flashcards",
+        "Subtitles: youtube-transcript library with proxy support and language fallback chains",
+        "Flashcards: Full CRUD with word, explanation, sourceSentence, videoId fields",
+        "Settings: nativeLanguage, learnedLanguage, numExamples, explanationLevel persisted in SQLite",
+        "Recent work: flashcards feature implemented (backend + frontend), uncommitted in git status",
+        "opencode.json at /home/allen/.config/opencode/ configures the AI agent system used to develop this project",
+        "Containerfile at /home/allen/.config/opencode/Containerfile defines Fedora 44 podman-based dev env",
+        "No Dockerfile or docker-compose in the project itself — only the opencode Containerfile exists"
+      ],
+      "call_chains": [
+        "Frontend fetch -> backend/api/subtitles -> SubtitlesService -> YoutubeTranscript.fetchTranscript (with proxyFetch)",
+        "Frontend fetch -> backend/api/ai/explain -> AiService -> FallbackChain -> GroqProvider.proxyFetch -> OpenCodeZenProvider.proxyFetch",
+        "Frontend fetch -> backend/api/settings -> SettingsService -> Drizzle SQLite",
+        "Frontend fetch -> backend/api/flashcards -> FlashcardsService -> Drizzle SQLite"
+      ],
+      "blast_radius": [
+        "apps/backend/src/ai/ai-provider.ts — core AI integration with OpenCode Zen API",
+        "apps/backend/src/ai/ai.service.ts — AI service orchestration and fallback chain",
+        "apps/backend/src/proxy-fetch.ts — HTTP proxy wrapper for external API calls",
+        "apps/frontend/src/lib/ai-api.ts — frontend AI API client (hardcoded localhost:3000)",
+        "apps/frontend/src/lib/flashcards-api.ts — frontend flashcards API client",
+        "apps/frontend/src/lib/youtube-transcript.ts — frontend subtitle fetching",
+        "apps/frontend/src/lib/settings-context.tsx — settings state management",
+        ".env — GROQ_API_KEY and OPENCODE_ZEN_MODEL configuration",
+        "apps/backend/fallbacks.json — runtime fallback tracking (groq: 10, opencode_zen: 0)"
+      ],
+      "research_sources": []
+    },
+    "for_supervisor": "VERDICT: ✅ Complete codebase exploration done. ImmersionSRS is a language learning tool that plays YouTube videos with synchronized subtitles, lets users click words for AI vocabulary/grammar explanations (in Spanish by default), and save flashcards. The opencode integration is specifically: (1) OpenCode Zen API as fallback AI provider at opencode.ai/zen/v1/chat/completions, (2) opencode.json in ~/.config/opencode/ configures the AI agent system used for development, (3) Containerfile provides a reproducible podman-based dev environment. No Dockerfile/docker-compose exists in the project itself. The fallbacks.json shows Groq has failed 10 times, OpenCode Zen 0 times — suggesting Groq is the primary but has reliability issues.",
+    "for_successor": "This exploration was for context gathering. No specific next agent needed unless the supervisor has a follow-up task."
+  }
+}

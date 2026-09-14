@@ -1,0 +1,27 @@
+{
+  "headers": {
+    "timestamp": "2026-09-14T00:00:00Z",
+    "agent_id": "senior-dev"
+  },
+  "data": {
+    "shared": {
+      "key_facts": [
+        "OpenCodeCLIProvider.chat() refactored with 4 fixes",
+        "System prompts now embedded via [SYSTEM]\\n{prompt}\\n\\n[MESSAGE]\\n{user} format",
+        "Retry loop: 3 attempts (initial + 2 retries) on any failure",
+        "JSON parser concatenates all type:text events instead of overwriting",
+        "Timeout increased from 30s to 60s",
+        "Empty messages and missing user message edge cases handled"
+      ],
+      "call_chains": [
+        "OpenCodeCLIProvider.chat -> execSync -> parse JSON events -> stripThinkingTags"
+      ],
+      "blast_radius": [
+        "apps/backend/src/ai/ai-provider.ts"
+      ],
+      "research_sources": []
+    },
+    "for_supervisor": "VERDICT: ✅ All 4 issues fixed. System prompts are now embedded in the message using [SYSTEM]/[MESSAGE] format since opencode run has no --system-prompt flag. Retry logic added: up to 2 retries on non-zero exit, JSON parse failure, or no text events, with raw output included in final error. JSON parser now concatenates all type:text events (not just the last one). Timeout increased to 60s. Edge cases (empty messages, no user message) handled. TypeScript compiles clean (pre-existing supertest/types error in test file is unrelated).",
+    "for_successor": "tester should test OpenCodeCLIProvider.chat() with: (1) messages with system + user roles to verify system prompt embedding, (2) empty messages array, (3) messages with only system role (no user), (4) verify retry behavior on mock failures"
+  }
+}

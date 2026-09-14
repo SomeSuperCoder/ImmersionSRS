@@ -171,6 +171,7 @@ function Watch() {
                 <SubtitleTooltip
                   subtitles={subtitles}
                   videoTitle={`Video ${videoId}`}
+                  videoId={videoId}
                 >
                   {isLoadingSubs ? (
                     <div className="flex items-center justify-center h-32">

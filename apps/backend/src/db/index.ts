@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
-import { userSettings } from './schema.js'
+import { userSettings, flashcards } from './schema.js'
 import { appLogger } from '../logger/logger.module.js'
 import path from 'path'
 import fs from 'fs'
@@ -31,6 +31,17 @@ try {
 } catch {
   // Column already exists — ignore
 }
+
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS flashcards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    word TEXT NOT NULL,
+    explanation TEXT NOT NULL,
+    source_sentence TEXT,
+    video_id TEXT,
+    created_at TEXT NOT NULL DEFAULT ''
+  )
+`)
 
 const existing = db.select().from(userSettings).all()
 if (existing.length === 0) {

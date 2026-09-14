@@ -1,0 +1,28 @@
+{
+  "headers": {
+    "timestamp": "2026-09-14T00:00:00Z",
+    "agent_id": "senior-dev"
+  },
+  "data": {
+    "shared": {
+      "key_facts": [
+        "stripThinkingTags now exported from ai-provider.ts with two-pass regex: closed blocks first, then unclosed blocks",
+        "ai.service.ts imports stripThinkingTags and applies it to both grammar_auto and grammar return paths in explain()",
+        "GroqProvider and OpenCodeCLIProvider already used stripThinkingTags internally — those were unaffected",
+        "parseVocabulary at line 77 has its own inline strip regex (same bug, unclosed tags not handled) — out of scope for this fix but noted"
+      ],
+      "call_chains": [
+        "ai.service.ts -> imports stripThinkingTags from ai-provider.js",
+        "ai.service.ts::explain() -> grammar_auto path -> stripThinkingTags(content)",
+        "ai.service.ts::explain() -> grammar path -> stripThinkingTags(content)"
+      ],
+      "blast_radius": [
+        "apps/backend/src/ai/ai-provider.ts",
+        "apps/backend/src/ai/ai.service.ts"
+      ],
+      "research_sources": []
+    },
+    "for_supervisor": "VERDICT: ✅ All three changes implemented and verified. (1) stripThinkingTags exported with two-pass regex in ai-provider.ts, (2) import added in ai.service.ts, (3) applied to grammar and grammar_auto paths. Typecheck passes (only pre-existing supertest error). NOTE: parseVocabulary at ai.service.ts:77 has an identical inline strip regex that also does not handle unclosed tags — same bug but outside the spec scope. Consider fixing it as a follow-up.",
+    "for_successor": "tester should verify: (1) closed thinking tags are stripped, (2) unclosed thinking tags are stripped, (3) grammar/grammar_auto responses have no think leakage, (4) parseVocabulary still works with closed tags. Unit tests for stripThinkingTags would be valuable."
+  }
+}

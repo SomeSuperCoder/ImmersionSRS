@@ -1,0 +1,33 @@
+{
+  "headers": {
+    "timestamp": "2026-09-14T11:02:31Z",
+    "agent_id": "scout"
+  },
+  "data": {
+    "shared": {
+      "key_facts": [
+        "ChatProvider interface: { name: string; chat(messages: ChatMessage[]): Promise<string> }",
+        "ChatMessage type: { role: system | user | assistant; content: string }",
+        "GroqProvider calls https://api.groq.com/openai/v1/chat/completions via proxyFetch, model=qwen/qwen3.6-27b, temp=0.7, max_tokens=800",
+        "OpenCodeZenProvider calls https://opencode.ai/zen/v1/chat/completions via proxyFetch, model=big-pickle (configurable via OPENCODE_ZEN_MODEL env), temp=0.7",
+        "FallbackChain wraps providers array, returns { result, provider }, tracks fallback counts in fallbacks.json",
+        "AiService initializes Groq first, OpenCode Zen as fallback, exposes explain(req) and buildMessages()",
+        "AiRequest type: vocabulary | grammar | grammar_auto with selectedText, context, question?, numExamples?, nativeLanguage?, explanationLevel?",
+        "3 prompt functions: vocabularyPrompt, grammarPrompt, grammarAutoPrompt - all return ChatMessage[]",
+        "stripThinkingTags removes <think>...</think> tags from Qwen model responses"
+      ],
+      "call_chains": [
+        "AiService.explain(req) -> buildMessages(req) -> vocabularyPrompt/grammarPrompt/grammarAutoPrompt -> FallbackChain.chat(messages) -> GroqProvider.chat() || OpenCodeZenProvider.chat() -> proxyFetch -> HTTP API"
+      ],
+      "blast_radius": [
+        "apps/backend/src/ai/ai-provider.ts",
+        "apps/backend/src/ai/ai.service.ts",
+        "apps/backend/src/ai/prompts.ts",
+        "apps/backend/src/ai/ai.module.ts"
+      ],
+      "research_sources": []
+    },
+    "for_supervisor": "VERIFIED: All 4 files read in full. The AI system uses a ChatProvider interface with chat(ChatMessage[]): Promise<string> signature. Groq is primary (model qwen/qwen3.6-27b via Groq API with proxyFetch), OpenCode Zen is fallback (model big-pickle via opencode.ai/zen with proxyFetch). FallbackChain wraps both with retry logic and fallback count tracking. AiService orchestrates via explain(req) method which calls buildMessages then chain.chat. Three prompt types exist: vocabulary (expects JSON response), grammar (free text with user question), grammar_auto (free text, no question). All prompts accept nativeLanguage (default es) and explanationLevel (simple|profound). proxyFetch handles all network calls.",
+    "for_successor": "These are the COMPLETE file contents for reference. The key interface to implement against is ChatProvider with chat(messages: ChatMessage[]): Promise<string>. The FallbackChain expects an array of ChatProvider instances. AiService.onModuleInit() constructs GroqProvider(groqKey) and OpenCodeZenProvider(opencodeModel) then wraps in FallbackChain."
+  }
+}

@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FlashcardsRouteImport } from './routes/flashcards'
 import { Route as WatchVideoIdRouteImport } from './routes/watch/$videoId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlashcardsRoute = FlashcardsRouteImport.update({
+  id: '/flashcards',
+  path: '/flashcards',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WatchVideoIdRoute = WatchVideoIdRouteImport.update({
@@ -25,27 +31,31 @@ const WatchVideoIdRoute = WatchVideoIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/flashcards': typeof FlashcardsRoute
   '/watch/$videoId': typeof WatchVideoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/flashcards': typeof FlashcardsRoute
   '/watch/$videoId': typeof WatchVideoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/flashcards': typeof FlashcardsRoute
   '/watch/$videoId': typeof WatchVideoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/watch/$videoId'
+  fullPaths: '/' | '/flashcards' | '/watch/$videoId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/watch/$videoId'
-  id: '__root__' | '/' | '/watch/$videoId'
+  to: '/' | '/flashcards' | '/watch/$videoId'
+  id: '__root__' | '/' | '/flashcards' | '/watch/$videoId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FlashcardsRoute: typeof FlashcardsRoute
   WatchVideoIdRoute: typeof WatchVideoIdRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flashcards': {
+      id: '/flashcards'
+      path: '/flashcards'
+      fullPath: '/flashcards'
+      preLoaderRoute: typeof FlashcardsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/watch/$videoId': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FlashcardsRoute: FlashcardsRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
 }
 export const routeTree = rootRouteImport

@@ -13,16 +13,19 @@ import {
   type GrammarResponse,
 } from '@/lib/ai-api'
 import { useSettings } from '@/lib/settings-context'
+import { saveFlashcard } from '@/lib/flashcards-api'
 
 interface SubtitleTooltipProps {
   subtitles: { text: string; startTime: number; endTime: number }[]
   videoTitle?: string
+  videoId?: string
   children: React.ReactNode
 }
 
 export function SubtitleTooltip({
   subtitles,
   videoTitle = '',
+  videoId,
   children,
 }: SubtitleTooltipProps) {
   const [selection, setSelection] = useState<{
@@ -35,6 +38,9 @@ export function SubtitleTooltip({
   const [vocabResult, setVocabResult] = useState<VocabularyResponse | null>(null)
   const [vocabLoading, setVocabLoading] = useState(false)
   const [vocabOpen, setVocabOpen] = useState(false)
+
+  const [vocabSaved, setVocabSaved] = useState(false)
+  const [vocabSaving, setVocabSaving] = useState(false)
 
   const [grammarOpen, setGrammarOpen] = useState(false)
   const [grammarQuestion, setGrammarQuestion] = useState('')
@@ -111,6 +117,30 @@ export function SubtitleTooltip({
       setVocabLoading(false)
     }
   }, [selection, getContext, settings.numExamples])
+
+  // Handle save flashcard
+  const handleSaveFlashcard = useCallback(async () => {
+    if (!vocabResult || vocabSaving) return
+
+    setVocabSaving(true)
+    try {
+      const sourceSentence = selection
+        ? subtitles[selection.subtitleIndex]?.text
+        : undefined
+      await saveFlashcard({
+        word: vocabResult.word,
+        explanation: vocabResult.definition,
+        sourceSentence,
+        videoId,
+      })
+      setVocabSaved(true)
+      setTimeout(() => setVocabSaved(false), 2000)
+    } catch {
+      // Silently fail — button just stays as-is
+    } finally {
+      setVocabSaving(false)
+    }
+  }, [vocabResult, vocabSaving, selection, subtitles, videoId])
 
   // Handle grammar click — open dialog with input
   const handleGrammarClick = useCallback(() => {
@@ -289,6 +319,17 @@ export function SubtitleTooltip({
           ) : null}
 
           <DialogFooter>
+            {vocabResult && (
+              <Button
+                variant={vocabSaved ? 'default' : 'outline'}
+                size="sm"
+                className="text-xs"
+                onClick={handleSaveFlashcard}
+                disabled={vocabSaving || vocabSaved}
+              >
+                {vocabSaved ? 'Guardado ✓' : vocabSaving ? 'Guardando...' : '💾 Guardar flashcard'}
+              </Button>
+            )}
             <Button variant="outline" onClick={() => setVocabOpen(false)} className="text-xs">
               Cerrar
             </Button>

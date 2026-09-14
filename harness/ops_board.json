@@ -1,0 +1,11 @@
+{
+  "task": "Fix thinking blocks leaking into UI",
+  "current_wave": "done",
+  "agents": [
+    {
+      "id": "senior-dev",
+      "status": "done",
+      "task": "Fixed stripThinkingTags regex and applied to grammar paths"
+    }
+  ]
+}

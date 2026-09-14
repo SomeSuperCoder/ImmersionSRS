@@ -1,0 +1,70 @@
+# ============================================================================
+# Containerfile — Minimal opencode runtime for ImmersionSRS
+#
+# Purpose: Run opencode with a forced custom config (no plugins, no MCP)
+# Build:  podman build -t immersionsrs-opencode -f container/Containerfile .
+# Run:    podman run -it immersionsrs-opencode
+# ============================================================================
+
+# ---- Base image -----------------------------------------------------------
+FROM registry.fedoraproject.org/fedora:44
+
+LABEL description="Minimal opencode runtime for ImmersionSRS" \
+      version="1.0.0"
+
+# ---- Pinned versions ------------------------------------------------------
+ENV NODE_VERSION=22 \
+    PNPM_VERSION=10.33.0
+
+# ---- System packages ------------------------------------------------------
+RUN dnf install -y --setopt=tsflags=nodocs \
+        git curl wget jq \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+# ---- Runtimes -------------------------------------------------------------
+# Node.js 22
+RUN curl -fsSL https://rpm.nodesource.com/setup_22.x | bash - \
+    && dnf install -y nodejs \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf
+
+# pnpm via corepack
+RUN corepack enable \
+    && corepack prepare pnpm@${PNPM_VERSION} --activate
+
+# ---- User setup -----------------------------------------------------------
+ARG USERNAME=dev
+ARG USER_UID=1000
+
+RUN useradd -m -u ${USER_UID} -s /usr/bin/bash ${USERNAME} \
+    && mkdir -p \
+        /home/${USERNAME}/.config/opencode \
+        /home/${USERNAME}/.local/bin \
+        /workspace \
+    && chown -R ${USERNAME}:${USERNAME} /home/${USERNAME} /workspace
+
+# Persistent env
+ENV PATH="/home/${USERNAME}/.local/share/pnpm/bin:/usr/local/bin:/usr/bin" \
+    HOME="/home/${USERNAME}" \
+    PNPM_HOME="/home/${USERNAME}/.local/share/pnpm"
+
+USER ${USERNAME}
+
+# ---- pnpm globals ---------------------------------------------------------
+RUN export PATH="$PNPM_HOME:$PATH" \
+    && pnpm add -g opencode-ai --allow-build=opencode-ai
+
+# ---- Config ---------------------------------------------------------------
+COPY --chown=${USERNAME}:${USERNAME} opencode.json /home/${USERNAME}/.config/opencode/opencode.json
+
+# Force opencode to use only this config, ignoring any project-level configs
+ENV OPENCODE_CONFIG="/home/${USERNAME}/.config/opencode/opencode.json" \
+    OPENCODE_DISABLE_PROJECT_CONFIG=true
+
+# ---- Working directory -----------------------------------------------------
+WORKDIR /workspace
+
+# ---- Default command -------------------------------------------------------
+# Interactive shell — user runs `opencode run --format json` manually
+CMD ["/usr/bin/bash"]

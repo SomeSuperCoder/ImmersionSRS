@@ -1,12 +1,31 @@
 import * as fs from 'fs'
 import * as path from 'path'
+import { exec } from 'child_process'
+import { promisify } from 'util'
 import { proxyFetch } from '../proxy-fetch.js'
 import { appLogger } from '../logger/logger.module.js'
 import type { ChatMessage } from './prompts.js'
 
+const execAsync = promisify(exec)
+
 /** Strip `<think>...</think>` tags from AI responses (Qwen models emit these). */
-function stripThinkingTags(content: string): string {
-  return content.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+export function stripThinkingTags(content: string): string {
+  // First pass: remove properly closed <think>...</think> blocks
+  let result = content.replace(/<think>[\s\S]*?<\/think>/g, '')
+  // Second pass: remove unclosed <think> blocks (from opening tag to end of string)
+  result = result.replace(/<think>[\s\S]*$/g, '')
+  return result.trim()
+}
+
+/** Strip markdown code blocks from AI responses (models often wrap JSON in ```json...```). */
+function stripMarkdownCodeBlocks(content: string): string {
+  return content.replace(/^```(?:json)?\n/gm, '').replace(/\n```$/gm, '').trim()
+}
+
+/** Escape a string for safe use in a shell double-quoted argument. */
+function shellEscape(str: string): string {
+  // Replace backslash, double-quote, dollar, and backtick with escaped versions
+  return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`')
 }
 
 export interface ChatProvider {
@@ -63,33 +82,112 @@ export class GroqProvider implements ChatProvider {
 }
 
 // ============================================================================
-// OpenCode Zen Provider (fallback)
+// OpenCode CLI Provider (fallback)
 // ============================================================================
 
-export class OpenCodeZenProvider implements ChatProvider {
-  name = 'opencode_zen'
-  private model: string
-
-  constructor(model = 'big-pickle') {
-    this.model = model
-  }
+export class OpenCodeCLIProvider implements ChatProvider {
+  name = 'opencode_cli'
+  private static readonly MAX_RETRIES = 2
+  private static readonly TIMEOUT_MS = 60_000
 
   async chat(messages: ChatMessage[]): Promise<string> {
-    const response = await proxyFetch('https://opencode.ai/zen/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'opencode/1.18.15',
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages,
-        temperature: 0.7,
-      }),
-    })
+    if (messages.length === 0) {
+      throw new Error('[OpenCodeCLI] Empty messages array')
+    }
 
-    const data = await response.json() as any
-    return stripThinkingTags(data.choices?.[0]?.message?.content ?? '')
+    // Extract system messages and join them
+    const systemMessages = messages.filter(m => m.role === 'system')
+    const systemPrompt = systemMessages.length > 0
+      ? systemMessages.map(m => m.content).join('\n')
+      : ''
+
+    // Extract the last user message
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
+    if (!lastUserMsg) {
+      throw new Error('[OpenCodeCLI] No user message found in messages array')
+    }
+
+    // Build the combined prompt: embed system prompt if present
+    const prompt = systemPrompt
+      ? `[SYSTEM]\n${systemPrompt}\n\n[MESSAGE]\n${lastUserMsg.content}`
+      : lastUserMsg.content
+
+    const escapedPrompt = shellEscape(prompt)
+
+    // Resolve the opencode config path relative to the compiled output (dist/ai/)
+    const configPath = path.resolve(__dirname, '../../../../container/opencode.json')
+
+    let lastRawOutput = ''
+
+    for (let attempt = 0; attempt <= OpenCodeCLIProvider.MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        appLogger.warn(
+          { attempt, maxRetries: OpenCodeCLIProvider.MAX_RETRIES },
+          '[OpenCodeCLI] Retrying after failure'
+        )
+      }
+
+      try {
+        appLogger.debug({ configPath, attempt }, '[OpenCodeCLI] Running opencode run')
+
+        const { stdout } = await execAsync(
+          `opencode run --format json -m opencode/big-pickle "${escapedPrompt}"`,
+          {
+            env: {
+              ...process.env,
+              OPENCODE_CONFIG: configPath,
+              OPENCODE_DISABLE_PROJECT_CONFIG: 'true',
+            },
+            encoding: 'utf-8',
+            timeout: OpenCodeCLIProvider.TIMEOUT_MS,
+          }
+        )
+        lastRawOutput = stdout
+
+        // Parse newline-delimited JSON events, concatenate all text events
+        const lines = lastRawOutput.trim().split('\n')
+        const textChunks: string[] = []
+
+        for (const line of lines) {
+          try {
+            const event = JSON.parse(line)
+            if (event.type === 'text' && event.part?.text) {
+              textChunks.push(event.part.text)
+            }
+          } catch {
+            // Skip non-JSON lines (e.g. stderr output, partial writes)
+          }
+        }
+
+        if (textChunks.length === 0) {
+          throw new Error(
+            `[OpenCodeCLI] No text events found in output (${lines.length} lines parsed)`
+          )
+        }
+
+        const combined = textChunks.join('')
+        return stripMarkdownCodeBlocks(stripThinkingTags(combined))
+
+      } catch (err) {
+        const isLastAttempt = attempt === OpenCodeCLIProvider.MAX_RETRIES
+        const errorMessage = err instanceof Error ? err.message : String(err)
+
+        appLogger.warn(
+          { attempt, error: errorMessage, isLastAttempt },
+          '[OpenCodeCLI] Attempt failed'
+        )
+
+        if (isLastAttempt) {
+          throw new Error(
+            `[OpenCodeCLI] All ${OpenCodeCLIProvider.MAX_RETRIES + 1} attempts failed. ` +
+            `Last error: ${errorMessage}\nRaw output:\n${lastRawOutput}`
+          )
+        }
+      }
+    }
+
+    // Unreachable — TypeScript needs this for the return type
+    throw new Error('[OpenCodeCLI] Unexpected: exhausted retry loop without throw')
   }
 }
 
@@ -142,10 +240,10 @@ export class FallbackChain {
       const data = fs.readFileSync(this.fallbacksPath, 'utf-8')
       const loaded = JSON.parse(data)
       // Merge with defaults so new providers get counted
-      this.fallbackCounts = { groq: 0, opencode_zen: 0, ...loaded }
+      this.fallbackCounts = { groq: 0, opencode_cli: 0, ...loaded }
     } catch {
       // File doesn't exist yet, use defaults
-      this.fallbackCounts = { groq: 0, opencode_zen: 0 }
+      this.fallbackCounts = { groq: 0, opencode_cli: 0 }
     }
   }
 

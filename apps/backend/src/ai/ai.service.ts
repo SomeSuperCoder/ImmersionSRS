@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { appLogger } from '../logger/logger.module.js'
 import { vocabularyPrompt, grammarPrompt, grammarAutoPrompt, type ChatMessage } from './prompts.js'
-import { GroqProvider, OpenCodeZenProvider, FallbackChain } from './ai-provider.js'
+import { GroqProvider, OpenCodeCLIProvider, FallbackChain, stripThinkingTags } from './ai-provider.js'
 
 export interface AiRequest {
   type: 'vocabulary' | 'grammar' | 'grammar_auto'
@@ -30,12 +30,11 @@ export class AiService implements OnModuleInit {
     const groqKey = this.config.get<string>('GROQ_API_KEY')
     const providers: any[] = [new GroqProvider(groqKey)]
 
-    // OpenCode Zen as fallback
-    const opencodeModel = this.config.get<string>('OPENCODE_ZEN_MODEL') ?? 'big-pickle'
-    providers.push(new OpenCodeZenProvider(opencodeModel))
+    // OpenCode CLI as fallback
+    providers.push(new OpenCodeCLIProvider())
 
     this.chain = new FallbackChain(providers)
-    appLogger.info({ groq: !!groqKey, opencodeModel }, 'AI providers initialized')
+    appLogger.info({ groq: !!groqKey }, 'AI providers initialized')
   }
 
   async explain(req: AiRequest): Promise<any> {
@@ -51,10 +50,10 @@ export class AiService implements OnModuleInit {
       }
 
       if (req.type === 'grammar_auto') {
-        return { type: 'grammar', explanation: content }
+        return { type: 'grammar', explanation: stripThinkingTags(content) }
       }
 
-      return { type: 'grammar', explanation: content }
+      return { type: 'grammar', explanation: stripThinkingTags(content) }
     } catch (error) {
       appLogger.error({ error: String(error) }, 'AI API call failed')
       throw error
@@ -74,8 +73,8 @@ export class AiService implements OnModuleInit {
   }
 
   private parseVocabulary(content: string, selectedText: string): any {
-    // Strip <think>...</think> tags that Qwen models emit before JSON parsing
-    const cleaned = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+    // Use the shared stripThinkingTags which handles both closed and unclosed tags
+    const cleaned = stripThinkingTags(content)
     try {
       const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
       if (jsonMatch) {

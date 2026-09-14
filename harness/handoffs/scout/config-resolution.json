@@ -1,0 +1,44 @@
+{
+  "headers": {
+    "timestamp": "2026-09-14T08:05:00Z",
+    "agent_id": "scout"
+  },
+  "data": {
+    "shared": {
+      "key_facts": [
+        "Config resolution: opencode loads config in layers, merging from multiple sources",
+        "Global config directory: ~/.config/opencode/ (XDG_CONFIG_HOME/opencode)",
+        "Global config files loaded in order: config.json, opencode.json, opencode.jsonc",
+        "Project config: .opencode/opencode.json or .opencode/opencode.jsonc (walks up from CWD)",
+        "OPENCODE_CONFIG env var: direct path to a specific config file",
+        "OPENCODE_CONFIG_DIR env var: overrides the entire global config directory",
+        "OPENCODE_CONFIG_CONTENT env var: inline config content as a string",
+        "OPENCODE_DISABLE_PROJECT_CONFIG env var: disables all .opencode/ project configs",
+        "--dir flag only changes CWD, does NOT change which config files are loaded",
+        "Config merging: later configs override earlier ones (merged, not replaced)",
+        "debug config shows the FINAL resolved config after all merges"
+      ],
+      "call_chains": [
+        "Config.loadInstanceState -> loads global from ~/.config/opencode/{config.json,opencode.json,opencode.jsonc}",
+        "Config.loadInstanceState -> loads project from .opencode/{opencode.json,opencode.jsonc} walking up from CWD",
+        "Config.loadInstanceState -> if OPENCODE_CONFIG set, loads that file too",
+        "Config.loadInstanceState -> if OPENCODE_CONFIG_DIR set, loads from that directory"
+      ],
+      "blast_radius": [
+        "Changing ~/.config/opencode/opencode.json affects ALL opencode sessions globally",
+        "Creating .opencode/opencode.json in a project makes it project-local",
+        "OPENCODE_CONFIG env var takes precedence for project config",
+        "OPENCODE_CONFIG_DIR completely replaces global config directory"
+      ],
+      "research_sources": [
+        "opencode debug config output",
+        "opencode debug paths output",
+        "opencode run --help output",
+        "Binary strings analysis of /home/allen/.opencode/bin/opencode",
+        "DEBUG log output from opencode run --dir /tmp"
+      ]
+    },
+    "for_supervisor": "VERIFIED: Opencode config resolution uses layered merging with clear precedence. For project-specific config, the BEST option is to create .opencode/opencode.json in the project root. This gets loaded automatically and overrides global config. The --dir flag does NOT affect config loading. Alternative env vars: OPENCODE_CONFIG (direct file path), OPENCODE_CONFIG_DIR (override config dir), OPENCODE_CONFIG_CONTENT (inline config). Evidence: debug logs show exact loading order; binary source code confirms the resolution chain.",
+    "for_successor": "If the task is to create a project-specific config, create .opencode/opencode.json in the project root with the desired config. It will be loaded automatically on top of the global ~/.config/opencode/opencode.json. The project config merges with (not replaces) the global config."
+  }
+}

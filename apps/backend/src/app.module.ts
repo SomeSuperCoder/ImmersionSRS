@@ -4,6 +4,7 @@ import { LoggerModule } from './logger/logger.module.js'
 import { SubtitlesModule } from './subtitles/subtitles.module.js'
 import { AiModule } from './ai/ai.module.js'
 import { SettingsModule } from './settings/settings.module.js'
+import { FlashcardsModule } from './flashcards/flashcards.module.js'
 import path from 'path'
 
 @Module({
@@ -15,6 +16,7 @@ import path from 'path'
     SubtitlesModule,
     AiModule,
     SettingsModule,
+    FlashcardsModule,
   ],
 })
 export class AppModule {}
